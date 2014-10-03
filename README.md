@@ -53,7 +53,7 @@ Have a look at the screen shots or download the Pivot Table Demo Project
 - Only basic attributes are supported, no references. This is done to minimize the number of server roundtrips and keep the widget design as simple as possible.
 - It is not possible to call a microflow with simple types as parameters so another entity is necessary to pass the selection to the microflow when the user clicks on a cell.
 - Float is not currently supported.
-- 
+
 ##Installation
 
 Normal installation using the App Store
@@ -121,6 +121,7 @@ Cell values are centered by default. There are other CSS classes available in th
 - Total row cell class
 
 Caption | Default value | Description
+---------- | ---------- | ----------
 X-axis label class | PivotDataWidgetXLabelCenter | X-axis label CSS class.
 Y-axis label class | PivotDataWidgetYLabel | Y-axis label CSS class.
 Odd row class | PivotDataWidgetOddRow | Odd row CSS class.
