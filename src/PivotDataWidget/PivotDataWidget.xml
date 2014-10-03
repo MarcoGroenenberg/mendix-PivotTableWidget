@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="PivotDataWidget.PivotDataWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>PivotDataWidget</name>
+    <description>Forces logon</description>
+    <icon>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9i
+        ZSBJbWFnZVJlYWR5ccllPAAAAb1JREFUeNqck8tKw1AQhv/E1LTe0KWISlNqS1vFCyK4bXXn
+        SnwE8QXcFt/EF3Enoqh47YViaUVUXBU3oq3NSZyZNullJR045D8n55/55iRH2zs62gEwjcHi
+        A7vZ7IE7YLDXcJTSXEq1fQPQmj8cx5Hh8rN73n5/lZ4Ee3WllM4bOLYimjwzVkenSafDrr/u
+        afaw11C2rSlJoOGk4sIy6tTZt1TOhKjihwON3rN2fE1mdwLsNWzb7iFw3n5wmJiS+fXTE9YX
+        FkSfFwrYTCZFnz48EMEc2NtFACFIm8BdtSr9jgaDuCyVpOexUAhnuZxoDvb4BIo2dwiA1Py8
+        zO8rFaxGoy0aSrSRSIi+yOfBHiGQBH0E+ZcXIQiZJm7LZak6wjTFYg9BK0Gz6bfgEcRnZ2We
+        f37GUiQi+o7OYy0eb9FQIklA3p5D9AhKr69CYA4P45Ha4KpBorlpn4f3GdmrUxZd9f0H0ZkZ
+        xIii8fuLZDiMlGWh3mhgmb7ISizWaYG8RqNeH+onKL+/CwFHgdrwqt5TG90E7DU+azUzEAjg
+        OPbVvh/mv+4We9irjS8u7lM1a5CrqOt6VfOQBo0/AQYADu2BHPVXcUgAAAAASUVORK5CYII=
+    </icon>
+    <properties>
+
+        <!-- General configuration properties -->
+
+        <property key="entity" type="entity" allowNonPersistableEntities="true">
+            <caption>Entity</caption>
+            <category>Configuration</category>
+            <description>The entity to build the table with</description>
+        </property>
+        <property key="cellValueAttr" type="attribute" entityProperty="entity" required="false">
+            <caption>Cell value attribute</caption>
+            <category>Configuration</category>
+            <description>The attribute used as cell value. Not necessary for cell value action count. All other actions are performed on this attribute</description>
+            <attributeTypes>
+                <attributeType name="Currency"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+            </attributeTypes>
+        </property>
+        <property key="cellValueAction" type="enumeration" defaultValue="count">
+            <caption>Cell value action</caption>
+            <category>Configuration</category>
+            <description>The action to perform on the values of the objects that exist behind one cell.</description>
+            <enumerationValues>
+                <enumerationValue key="count">Count</enumerationValue>
+                <enumerationValue key="sum">Sum</enumerationValue>
+                <enumerationValue key="average">Average</enumerationValue>
+                <enumerationValue key="min">Min</enumerationValue>
+                <enumerationValue key="max">Max</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="precisionForAverage" type="integer" defaultValue="0">
+            <caption>Decimal precision for average</caption>
+            <category>Configuration</category>
+            <description>Decimal precision for average, applicable for integer and long values only</description>
+        </property>
+        <property key="cellValueDateformat" type="string" defaultValue="dd-MM-yyyy">
+            <caption>Cell value date format</caption>
+            <category>Configuration</category>
+            <description>Cell value date format, applicable for date/time only</description>
+        </property>
+        <property key="showTotalColumn" type="boolean" defaultValue="false">
+            <caption>Show total column</caption>
+            <category>Configuration</category>
+            <description>Show row total column as last column.</description>
+        </property>
+        <property key="totalColumnLabel" type="translatableString" required="false">
+            <caption>Total column label</caption>
+            <category>Configuration</category>
+            <description>Total column label</description>
+        </property>
+        <property key="showTotalRow" type="boolean" defaultValue="false">
+            <caption>Show total row</caption>
+            <category>Configuration</category>
+            <description>Show row total row as last row.</description>
+        </property>
+        <property key="totalRowLabel" type="translatableString" required="false">
+            <caption>Total row label</caption>
+            <category>Configuration</category>
+            <description>Total row label</description>
+        </property>
+        <property key="getDataMicroflow" type="string">
+            <caption>Get data microflow</caption>
+            <category>Configuration</category>
+            <description>Full name (like MyFirstModule.MicroflowName) of the microflow that returns a list of objects of the same type as the entity property.</description>
+        </property>
+        <property key="callGetDataMicroflow" type="enumeration" defaultValue="crtOnly">
+            <caption>When to call get data mf</caption>
+            <category>Configuration</category>
+            <description>When to call get data microflow</description>
+            <enumerationValues>
+                <enumerationValue key="crtOnly">Only after widget creation</enumerationValue>
+                <enumerationValue key="crtAndChg">After widget creation and after each change</enumerationValue>
+                <enumerationValue key="chgOnly">Only after each change</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="noDataText" type="translatableString">
+            <caption>No data text</caption>
+            <category>Configuration</category>
+            <description>Text to display when there is no data to display</description>
+            <translations>
+                <translation lang="en_GB">No data to display</translation>
+                <translation lang="en_US">No data to display</translation>
+                <translation lang="nl_NL">Geen gegevens beschikbaar</translation>
+            </translations>
+        </property>
+
+        <!-- X-axis properties -->
+
+        <property key="xIdAttr" type="attribute" entityProperty="entity">
+            <caption>X-axis ID attribute</caption>
+            <category>X-axis</category>
+            <description>The attribute used for grouping the data on the X-axis.</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+        <property key="xLabelAttr" type="attribute" entityProperty="entity">
+            <caption>X-axis label attribute</caption>
+            <category>X-axis</category>
+            <description>The attribute used as column heading.</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+        <property key="xLabelDateformat" type="string" defaultValue="dd-MM-yyyy">
+            <caption>X-axis date format</caption>
+            <category>X-axis</category>
+            <description>X-axis date format, applicable for date/time only</description>
+        </property>
+        <property key="xSortAttr" type="enumeration" defaultValue="label">
+            <caption>X-axis sort attribute</caption>
+            <category>X-axis</category>
+            <description>The attribute used for sorting the data on the X-axis. Defaults to label attribute</description>
+            <enumerationValues>
+                <enumerationValue key="label">Label</enumerationValue>
+                <enumerationValue key="id">ID</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="xSortDirection" type="enumeration" defaultValue="asc">
+            <caption>X-axis sort direction</caption>
+            <category>X-axis</category>
+            <description>Sort ascending or descending</description>
+            <enumerationValues>
+                <enumerationValue key="asc">Ascending</enumerationValue>
+                <enumerationValue key="desc">Descending</enumerationValue>
+            </enumerationValues>
+        </property>
+
+        <!-- Y-axis properties -->
+
+        <property key="yIdAttr" type="attribute" entityProperty="entity">
+            <caption>Y-axis ID attribute</caption>
+            <category>Y-axis</category>
+            <description>The attribute used for grouping the data on the Y-axis.</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+        <property key="yLabelAttr" type="attribute" entityProperty="entity">
+            <caption>Y-axis label attribute</caption>
+            <category>Y-axis</category>
+            <description>The attribute used as row label.</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+        <property key="yLabelDateformat" type="string" defaultValue="dd-MM-yyyy">
+            <caption>Y-axis date format</caption>
+            <category>Y-axis</category>
+            <description>Y-axis date format, applicable for date/time only</description>
+        </property>
+        <property key="ySortAttr" type="enumeration" defaultValue="label">
+            <caption>Y-axis sort attribute</caption>
+            <category>Y-axis</category>
+            <description>The attribute used for sorting the data on the Y-axis. Defaults to label attribute</description>
+            <enumerationValues>
+                <enumerationValue key="label">Label</enumerationValue>
+                <enumerationValue key="id">ID</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="ySortDirection" type="enumeration" defaultValue="asc">
+            <caption>Y-axis sort direction</caption>
+            <category>Y-axis</category>
+            <description>Sort ascending or descending</description>
+            <enumerationValues>
+                <enumerationValue key="asc">Ascending</enumerationValue>
+                <enumerationValue key="desc">Descending</enumerationValue>
+            </enumerationValues>
+        </property>
+
+        <!-- onClick properties -->
+
+        <property key="onCellClickMicroflow" type="string" required="false">
+            <caption>On cell click microflow</caption>
+            <category>Configuration onCellClick</category>
+            <description>Full name (like MyFirstModule.MicroflowName) of the microflow that receives an object of the same type as the on cell click entity property.</description>
+        </property>
+        <property key="onCellClickEntity" type="entity" allowNonPersistableEntities="true" required="false">
+            <caption>On cell click entity</caption>
+            <category>Configuration onCellClick</category>
+            <description>The entity used for the onCellClick, the widget creates an object of this entity at each cell click. It is recommended to use a non-persistent entity</description>
+        </property>
+        <property key="onCellClickXIdAttr" type="attribute" entityProperty="onCellClickEntity" required="false">
+            <caption>On cell click X-axis ID attribute</caption>
+            <category>Configuration onCellClick</category>
+            <description>The attribute to contain the X-axis ID</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+        <property key="onCellClickYIdAttr" type="attribute" entityProperty="onCellClickEntity" required="false">
+            <caption>On cell click Y-axis ID attribute</caption>
+            <category>Configuration onCellClick</category>
+            <description>The attribute to contain the Y-axis ID</description>
+            <attributeTypes>
+                <attributeType name="AutoNumber"/>
+                <attributeType name="DateTime"/>
+                <attributeType name="Enum"/>
+                <attributeType name="Integer"/>
+                <attributeType name="Long"/>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>
+
+        <!-- Styling properties -->
+
+        <property key="xLabelClass" type="string" defaultValue="PivotDataWidgetXLabelCenter">
+            <caption>X-axis label class</caption>
+            <category>Styling</category>
+            <description>X-axis label CSS class.</description>
+        </property>
+        <property key="yLabelClass" type="string" defaultValue="PivotDataWidgetYLabel">
+            <caption>Y-axis label class</caption>
+            <category>Styling</category>
+            <description>Y-axis label CSS class.</description>
+        </property>
+        <property key="oddRowClass" type="string" defaultValue="PivotDataWidgetOddRow">
+            <caption>Odd row class</caption>
+            <category>Styling</category>
+            <description>Odd row CSS class.</description>
+        </property>
+        <property key="evenRowClass" type="string" defaultValue="PivotDataWidgetEvenRow">
+            <caption>Even row class</caption>
+            <category>Styling</category>
+            <description>Even row CSS class.</description>
+        </property>
+        <property key="cellClass" type="string" defaultValue="PivotDataWidgetCellCenter">
+            <caption>Cell class</caption>
+            <category>Styling</category>
+            <description>Cell CSS class.</description>
+        </property>
+        <property key="totalColumnCellClass" type="string" defaultValue="PivotDataWidgetTotalColumnCellCenter">
+            <caption>Total column cell class</caption>
+            <category>Styling</category>
+            <description>Cell CSS class.</description>
+        </property>
+        <property key="totalRowClass" type="string" defaultValue="PivotDataWidgetTotalRow">
+            <caption>Total row class</caption>
+            <category>Styling</category>
+            <description>Cell CSS class.</description>
+        </property>
+        <property key="totalRowCellClass" type="string" defaultValue="PivotDataWidgetTotalRowCellCenter">
+            <caption>Total row cell class</caption>
+            <category>Styling</category>
+            <description>Cell CSS class.</description>
+        </property>
+        <property key="noDataTextClass" type="string" defaultValue="PivotDataWidgetNoDataText">
+            <caption>No data text class</caption>
+            <category>Styling</category>
+            <description>No data text CSS class.</description>
+        </property>
+        <property key="tresholdList" type="object" isList="true" required="false">
+            <caption>Cell styling thresholds</caption>
+            <category>Styling</category>
+            <description>Thresholds allow styling based on the cell value</description>
+            <properties>
+                <property key="minValue" type="string">
+                    <caption>Minimum value</caption>
+                    <category>Styling</category>
+                    <description>When the cell value is a date, enter a date as a string value that can be parsed into a date using the value of the cell value date format property</description>
+                </property>
+                <property key="additionalClass" type="string">
+                    <caption>Class</caption>
+                    <category>Styling</category>
+                    <description>The additional CSS class to use when the cell value is at least the specified value but no more than the next item, if any</description>
+                </property>
+            </properties>
+        </property>
+        <property key="onCellClickClass" type="string" defaultValue="PivotDataWidgetCellClickable">
+            <caption>On cell click class</caption>
+            <category>Styling</category>
+            <description>On cell click CSS class. This is an additional class applied to each table cell when the on cell click microflow is configured</description>
+        </property>
+
+    </properties>
+
+</widget>

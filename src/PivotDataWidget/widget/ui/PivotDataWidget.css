@@ -1,0 +1,121 @@
+.PivotDataWidget {
+    background-color: white;
+    overflow: auto;
+}
+
+.PivotDataWidgetYLabel {
+    padding-right: 10px;
+    font-weight: bold;
+}
+
+.PivotDataWidgetXLabelLeft,
+.PivotDataWidgetXLabelCenter,
+.PivotDataWidgetXLabelRight {
+    padding-left: 5px;
+    padding-right: 5px;
+    font-weight: bold;
+}
+
+.PivotDataWidgetXLabelLeft {
+    text-align: left;
+}
+
+.PivotDataWidgetXLabelCenter {
+    text-align: center;
+}
+
+.PivotDataWidgetXLabelRight {
+    text-align: right;
+}
+
+.PivotDataWidgetOddRow {
+    border: 1px solid #ccc;
+    background-color: #DFFFE7;
+}
+
+.PivotDataWidgetEvenRow {
+    border: 1px solid #ccc;
+}
+
+.PivotDataWidgetCellLeft,
+.PivotDataWidgetCellCenter,
+.PivotDataWidgetCellRight {
+    padding-left: 5px;
+    padding-right: 5px;
+    color: black;
+    border: 1px solid #ccc;
+}
+
+.PivotDataWidgetCellLeft {
+    text-align: left;
+}
+
+.PivotDataWidgetCellCenter {
+    text-align: center;
+}
+
+.PivotDataWidgetCellRight {
+    text-align: right;
+}
+
+.PivotDataWidgetCellClickable {
+    cursor: pointer;
+}
+
+.PivotDataWidgetTotalRow {
+    border: 1px solid #ccc;
+    background-color: #ccc;
+}
+
+.PivotDataWidgetTotalRowCellLeft,
+.PivotDataWidgetTotalRowCellCenter,
+.PivotDataWidgetTotalRowCellRight {
+    padding-left: 5px;
+    padding-right: 5px;
+    color: black;
+}
+
+.PivotDataWidgetTotalRowCellLeft {
+    text-align: left;
+}
+
+.PivotDataWidgetTotalRowCellCenter {
+    text-align: center;
+}
+
+.PivotDataWidgetTotalRowCellRight {
+    text-align: right;
+}
+
+.PivotDataWidgetTotalColumnCellLeft {
+    padding-right: 5px;
+    text-align: left;
+}
+
+.PivotDataWidgetTotalColumnCellCenter {
+    padding-right: 5px;
+    text-align: center;
+}
+
+.PivotDataWidgetTotalColumnCellRight {
+    padding-right: 5px;
+    text-align: right;
+}
+
+.PivotDataWidgetNoDataText {
+    margin: 5px;
+    font-weight: bold;
+
+}
+
+.PivotDataWidgetConfigurationError {
+    padding-top: 8px;
+    padding-left: 5px;
+    border: 1px solid red;
+    font-weight: bold;
+}
+
+.PivotDataWidgetConfigurationError p, .PivotDataWidgetConfigurationError li {
+    color: red;
+    font-weight: bold;
+}
