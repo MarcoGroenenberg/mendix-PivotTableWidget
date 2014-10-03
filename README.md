@@ -133,6 +133,25 @@ Total row cell class | PivotDataWidgetTotalRowCellCenter | Cell CSS class.
 No data text class | PivotDataWidgetNoDataText | No data text CSS class.
 On cell click class | PivotDataWidgetCellClickable | On cell click CSS class. This is an additional class applied to each table cell when the on cell click microflow is configured
 
+####X-axis label class 
+Default: PivotDataWidgetXLabelCenter
+X-axis label CSS class.
+####Y-axis label class
+Default: PivotDataWidgetYLabel 
+Y-axis label CSS class.
+####Odd row class
+Default: PivotDataWidgetOddRow
+Odd row CSS class.
+
+####Even row class
+Default: PivotDataWidgetEvenRow
+Even row CSS class.
+
+####Cell class
+Default: PivotDataWidgetCellCenter
+Cell CSS class.
+
+
 ###Styling thresholds
 
 To highlight certain values, styling thresholds can be defined. When the cell value is at least the threshold value and less than any next threshold value, the CSS class will be applied to the cell. Only the CSS class of the highest threshold will be used.
