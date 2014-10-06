@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <widget id="PivotDataWidget.PivotDataWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>PivotDataWidget</name>
-    <description>Forces logon</description>
+    <description>Pivot Data Widget</description>
     <icon>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9i
         ZSBJbWFnZVJlYWR5ccllPAAAAb1JREFUeNqck8tKw1AQhv/E1LTe0KWISlNqS1vFCyK4bXXn
@@ -76,10 +76,11 @@
             <category>Configuration</category>
             <description>Total row label</description>
         </property>
-        <property key="getDataMicroflow" type="string">
+        <property key="getDataMicroflow" type="microflow">
             <caption>Get data microflow</caption>
             <category>Configuration</category>
-            <description>Full name (like MyFirstModule.MicroflowName) of the microflow that returns a list of objects of the same type as the entity property.</description>
+            <description>The microflow that returns a list of objects of the same type as the entity property.</description>
+            <returnType type="Object" isList="true" entityProperty="entity"></returnType>
         </property>
         <property key="callGetDataMicroflow" type="enumeration" defaultValue="crtOnly">
             <caption>When to call get data mf</caption>
