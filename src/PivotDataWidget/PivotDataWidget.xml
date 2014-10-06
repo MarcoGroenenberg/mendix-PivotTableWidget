@@ -209,15 +209,16 @@
 
         <!-- onClick properties -->
 
-        <property key="onCellClickMicroflow" type="string" required="false">
-            <caption>On cell click microflow</caption>
-            <category>Configuration onCellClick</category>
-            <description>Full name (like MyFirstModule.MicroflowName) of the microflow that receives an object of the same type as the on cell click entity property.</description>
-        </property>
         <property key="onCellClickEntity" type="entity" allowNonPersistableEntities="true" required="false">
             <caption>On cell click entity</caption>
             <category>Configuration onCellClick</category>
             <description>The entity used for the onCellClick, the widget creates an object of this entity at each cell click. It is recommended to use a non-persistent entity</description>
+        </property>
+        <property key="onCellClickMicroflow" type="microflow" entityProperty="onCellClickEntity" required="false">
+            <caption>On cell click microflow</caption>
+            <category>Configuration onCellClick</category>
+            <description>The microflow that receives an object of the same type as the on cell click entity property.</description>
+            <returnType type="Void"></returnType>
         </property>
         <property key="onCellClickXIdAttr" type="attribute" entityProperty="onCellClickEntity" required="false">
             <caption>On cell click X-axis ID attribute</caption>
