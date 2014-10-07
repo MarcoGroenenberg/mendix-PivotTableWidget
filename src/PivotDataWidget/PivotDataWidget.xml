@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="PivotDataWidget.PivotDataWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+<widget id="PivotDataWidget.widget.PivotDataWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>PivotDataWidget</name>
     <description>Pivot Data Widget</description>
     <icon>
@@ -245,6 +245,11 @@
                 <attributeType name="Long"/>
                 <attributeType name="String"/>
             </attributeTypes>
+        </property>
+        <property key="onCellClickReference" type="entity" entityProperty="onCellClickEntity" isPath="yes" pathType="reference" allowNonPersistableEntities="true" required="false">
+            <caption>Context entity reference</caption>
+            <category>Configuration onCellClick</category>
+            <description>The reference to the context entity. The widget will set this reference to the context object.</description>
         </property>
 
         <!-- Styling properties -->

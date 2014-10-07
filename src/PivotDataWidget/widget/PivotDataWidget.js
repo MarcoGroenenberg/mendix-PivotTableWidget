@@ -1,6 +1,6 @@
-dojo.provide("PivotDataWidget.PivotDataWidget");
+dojo.provide("PivotDataWidget.widget.PivotDataWidget");
 
-dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.mixin._Contextable ], {
+dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.mixin._Contextable ], {
 
     widgetContext                   : null,
     contextGUID                     : null,
@@ -34,16 +34,20 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
     onClickXIdValue                 : null,
     onClickYIdValue                 : null,
     onClickMendixObject             : null,
+    onCellClickReferenceName        : null,
 
     /**
      * Called by the Mendix runtime after creation.
      */
     postCreate: function () {
         'use strict';
-        mendix.dom.addClass(this.domNode, "PivotDataWidget");
+        dojo.addClass(this.domNode, "PivotDataWidget");
 
         // Load CSS ... automatically from ui directory
 
+        if (this.onCellClickReference) {
+            this.onCellClickReferenceName = this.onCellClickReference.substr(0, this.onCellClickReference.indexOf('/'));
+        }
     },
 
     /**
@@ -135,8 +139,8 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
                 this.buildTableData();
                 this.createTable();
             } else {
-                noDataNode = mendix.dom.p(this.noDataText);
-                mendix.dom.addClass(noDataNode, this.noDataTextClass);
+                noDataNode = mxui.dom.p(this.noDataText);
+                dojo.addClass(noDataNode, this.noDataTextClass);
                 this.domNode.appendChild(noDataNode);
             }
         }
@@ -283,11 +287,11 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
             i,
             listNode;
 
-        this.domNode.appendChild(mendix.dom.p("Configuration error(s) found"));
-        mendix.dom.addClass(this.domNode, "PivotDataWidgetConfigurationError");
+        this.domNode.appendChild(mxui.dom.p("Configuration error(s) found"));
+        dojo.addClass(this.domNode, "PivotDataWidgetConfigurationError");
         listNode = document.createElement("ul");
         for (i = 0; i < errorMessageArray.length; i = i + 1) {
-            listNode.appendChild(mendix.dom.li(errorMessageArray[i]));
+            listNode.appendChild(mxui.dom.li(errorMessageArray[i]));
         }
         this.domNode.appendChild(listNode);
     },
@@ -623,9 +627,9 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
         for (rowIndex = 0; rowIndex < this.yKeyArray.length; rowIndex = rowIndex + 1) {
             rowNode = document.createElement("tr");
             if (rowIndex % 2 === 0) {
-                mendix.dom.addClass(rowNode, this.evenRowClass);
+                dojo.addClass(rowNode, this.evenRowClass);
             } else {
-                mendix.dom.addClass(rowNode, this.oddRowClass);
+                dojo.addClass(rowNode, this.oddRowClass);
             }
 
             // Get the label and the ID
@@ -633,8 +637,8 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
             yIdValue = this.yKeyArray[rowIndex].idValue;
 
             // The row label
-            node = mendix.dom.th(yLabelValue);
-            mendix.dom.addClass(node, this.yLabelClass);
+            node = mxui.dom.th(yLabelValue);
+            dojo.addClass(node, this.yLabelClass);
             rowNode.appendChild(node);
 
             // Columns
@@ -695,16 +699,16 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
                 default:
                     node.innerHTML      = cellValue;
                 }
-                mendix.dom.addClass(node, this.cellClass);
+                dojo.addClass(node, this.cellClass);
                 if (this.onCellClickMicroflow !== "") {
                     node.setAttribute(this.xIdAttr, xIdValue);
                     node.setAttribute(this.yIdAttr, yIdValue);
-                    mendix.dom.addClass(node, this.onCellClickClass);
+                    dojo.addClass(node, this.onCellClickClass);
                     node.onclick = dojo.hitch(this, this.onClickCell);
                 }
                 // Additional class based on the treshold?
                 if (tresholdClass) {
-                    mendix.dom.addClass(node, tresholdClass);
+                    dojo.addClass(node, tresholdClass);
                 }
                 rowNode.appendChild(node);
             }
@@ -718,7 +722,7 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
                 default:
                     node.innerHTML      = yTotal;
                 }
-                mendix.dom.addClass(node, this.totalColumnCellClass);
+                dojo.addClass(node, this.totalColumnCellClass);
                 rowNode.appendChild(node);
             }
 
@@ -728,9 +732,9 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
         if (this.showTotalRow) {
             // Footer row containing the totals for each column
             footerRowNode = document.createElement("tr");
-            mendix.dom.addClass(footerRowNode, this.totalRowClass);
-            node = mendix.dom.td(this.totalRowLabel);
-            mendix.dom.addClass(node, this.yLabelClass);
+            dojo.addClass(footerRowNode, this.totalRowClass);
+            node = mxui.dom.td(this.totalRowLabel);
+            dojo.addClass(node, this.yLabelClass);
             footerRowNode.appendChild(node);
             yTotal = 0;
             for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
@@ -747,7 +751,7 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
                 default:
                     node.innerHTML      = cellValue;
                 }
-                mendix.dom.addClass(node, this.totalRowCellClass);
+                dojo.addClass(node, this.totalRowCellClass);
                 footerRowNode.appendChild(node);
             }
             node                = document.createElement("td");
@@ -759,7 +763,7 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
             default:
                 node.innerHTML      = yTotal;
             }
-            mendix.dom.addClass(node, this.totalRowCellClass);
+            dojo.addClass(node, this.totalRowCellClass);
             footerRowNode.appendChild(node);
 
             tableNode.appendChild(footerRowNode);
@@ -785,7 +789,7 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
             spanNode;
 
         // Create the span containing the header value
-        spanNode = mendix.dom.span(headerValue);
+        spanNode = mxui.dom.span(headerValue);
 
         // Create the div
         divNode = document.createElement("div");
@@ -794,7 +798,7 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
         // Create the th
         headerNode = document.createElement("th");
         headerNode.appendChild(divNode);
-        mendix.dom.addClass(headerNode, this.xLabelClass);
+        dojo.addClass(headerNode, this.xLabelClass);
 
         return headerNode;
 
@@ -828,28 +832,18 @@ dojo.declare('PivotDataWidget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.
 
         console.log("onClickCellObjectCreated");
 
-        var
-            setAttrStatus = true;
-
-        if (!mendixObject.set(this.onCellClickXIdAttr, this.onClickXIdValue)) {
-            setAttrStatus = false;
-            alert("set " + this.onCellClickXIdAttr + " failed");
+        mendixObject.set(this.onCellClickXIdAttr, this.onClickXIdValue);
+        mendixObject.set(this.onCellClickYIdAttr, this.onClickYIdValue);
+        if (this.onCellClickReferenceName) {
+            mendixObject.addReference(this.onCellClickReferenceName, this.contextGUID);
         }
-        if (!mendixObject.set(this.onCellClickYIdAttr, this.onClickYIdValue)) {
-            setAttrStatus = false;
-            alert("set " + this.onCellClickYIdAttr + " failed");
-        }
-        if (setAttrStatus) {
-            console.log("Commit object");
-            this.onClickMendixObject = mendixObject;
-            mx.data.commit({
-                mxobj    : mendixObject,
-                callback : dojo.hitch(this, this.onClickMendixObjectCommitted),
-                error    : dojo.hitch(this, this.onClickMendixObjectCommitError)
-            });
-        }
-
-
+        console.log("Commit object");
+        this.onClickMendixObject = mendixObject;
+        mx.data.commit({
+            mxobj    : mendixObject,
+            callback : dojo.hitch(this, this.onClickMendixObjectCommitted),
+            error    : dojo.hitch(this, this.onClickMendixObjectCommitError)
+        });
     },
 
     /**
