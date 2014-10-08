@@ -97,8 +97,6 @@ By default the X and Y axis values are sorted ascending on their display values.
 
 The pivot table widget can display an additional column and row for the totals, only for actions Count and Sum.
 
-This is done to allow any microflow without specifying the return type, as there is no fixed return type.
-
 ###React to context object updates.
 
 The pivot table widget can call the microflow in these situations:
