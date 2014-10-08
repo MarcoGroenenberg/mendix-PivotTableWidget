@@ -97,8 +97,6 @@ By default the X and Y axis values are sorted ascending on their display values.
 
 The pivot table widget can display an additional column and row for the totals, only for actions Count and Sum.
 
-The microflow property is actually a string value, containing the full microflow name, for example MyFirstModule.GetMyObjectList
-
 This is done to allow any microflow without specifying the return type, as there is no fixed return type.
 
 ###React to context object updates.
@@ -142,8 +140,8 @@ To highlight certain values, styling thresholds can be defined. When the cell va
 Unfortunately, it is not possible to call a microflow with simple parameters, like strings or integers.
 
 To handle cell click events, the pivot table widget creates an object of the entity specified in the properties, sets the X and Y values of the cell on it and then calls the microflow.
+When you create an association from the on click entity to the context entity, you can select that relation. The widget will then set that reference on the object. The microflow has then direct access to the context object of the widget. 
 
-Again, the microflow property is actually a string value, containing the full microflow name, for example MyFirstModule.HandleCellClick
 
 **It is strongly advised to use a non-persistent entity for this purpose!**
 
