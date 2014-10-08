@@ -4,6 +4,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
     widgetContext                   : null,
     contextGUID                     : null,
+    handle                          : null,
     mendixObjectArray               : null,
     cellMap                         : {},
     xKeyArray                       : [],
@@ -61,6 +62,10 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         var
             thisObj = this;
 
+        if (this.handle) {
+            mx.data.unsubscribe(this.handle);
+        }
+        
         if (context) {
             this.widgetContext = context;
             this.contextGUID = context.getTrackID();
@@ -69,7 +74,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
                     thisObj.getData();
                 }
                 if (this.callGetDataMicroflow === "crtAndChg" || this.callGetDataMicroflow === "chgOnly") {
-                    this.subscribe({
+                    this.handle = mx.data.subscribe({
                         guid: this.contextGUID,
                         callback: dojo.hitch(this, this.contextObjectChangedCallback)
                     });
@@ -1066,5 +1071,8 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     uninitialize: function () {
         'use strict';
         console.log(this.domNode.id + ": uninitialize");
+        if (this.handle) {
+            mx.data.unsubscribe(this.handle);
+        }
     }
 });
