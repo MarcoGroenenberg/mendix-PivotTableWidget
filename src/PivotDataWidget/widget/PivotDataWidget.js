@@ -4,6 +4,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
     widgetContext                   : null,
     contextGUID                     : null,
+    getDataMicroflowCallPending     : null,
     handle                          : null,
     mendixObjectArray               : null,
     cellMap                         : {},
@@ -62,13 +63,16 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         var
             thisObj = this;
 
+        console.log(this.domNode.id + ": applyContext");
+
         if (this.handle) {
             mx.data.unsubscribe(this.handle);
         }
-        
+
         if (context) {
             this.widgetContext = context;
             this.contextGUID = context.getTrackID();
+            console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
             if (this.checkProperties()) {
                 if (this.callGetDataMicroflow === "crtOnly" || this.callGetDataMicroflow === "crtAndChg") {
                     thisObj.getData();
@@ -103,6 +107,13 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
         console.log(this.domNode.id + ": Call microflow to get the data");
 
+        if (this.getDataMicroflowCallPending) {
+            // Prevent problems when Mendix runtime calls applyContext multiple times
+            // When the microflow commits the context object, we might go into an endless loop!
+            console.log(this.domNode.id + ": Skipped microflow call as we did not get an answer from a previous call.");
+            return;
+        }
+        this.getDataMicroflowCallPending = true;
         this.showProgress();
 
         var args = {
@@ -129,6 +140,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
         console.log(this.domNode.id + ": dataMicroflowCallback");
 
+        this.getDataMicroflowCallPending = false;
         this.hideProgress();
 
         this.mendixObjectArray = mendixObjectArray;
@@ -161,6 +173,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         'use strict';
 
         this.hideProgress();
+        this.getDataMicroflowCallPending = false;
 
         console.dir(err);
         alert("Call to microflow " + this.getDataMicroflow + " ended with an error");
@@ -997,6 +1010,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     hideProgress: function () {
         'use strict';
         mx.ui.hideProgress(this.progressDialogId);
+        this.progressDialogId = null;
     },
 
     /**
@@ -1064,6 +1078,29 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         return result;
     },
 
+	/**
+	 * How the widget re-acts from actions invoked by the Mendix App.
+	 */
+	suspend : function () {
+		'use strict';
+        console.log(this.domNode.id + ": suspend");
+	},
+
+	resume : function () {
+		'use strict';
+        console.log(this.domNode.id + ": resume");
+	},
+
+	enable : function () {
+		'use strict';
+        console.log(this.domNode.id + ": enable");
+	},
+
+	disable : function () {
+		'use strict';
+        console.log(this.domNode.id + ": disable");
+	},
+
     /**
      * Cleanup upon destruction of the widget instance.
      *
@@ -1073,6 +1110,9 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         console.log(this.domNode.id + ": uninitialize");
         if (this.handle) {
             mx.data.unsubscribe(this.handle);
+        }
+        if (this.progressDialogId) {
+            this.hideProgress();
         }
     }
 });
