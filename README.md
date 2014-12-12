@@ -3,34 +3,24 @@ mendix-PivotTableWidget
 
 Mendix Pivot Table Widget
 
- 
-
 ##Description
 This widget calls a microflow to get a list of entity objects and creates a pivot table using the list.
 
 The context the widget is placed in is passed on to the the microflow. This allows the application to present a selection screen and pass those selections to the microflow that creates the list.
 
- 
-
 The values to group the data on and the labels for the X and Y axis are taken from the entity objects.
-
- 
 
 The pivot table widget can count the items in each cell or determine the sum, average, minimum or maximum value in each cell.
 
 For count and sum, optionally a total column and row can be displayed.
 
- 
-
 The various elements in the table can easily be styled.
 
 It is also possible to set thresholds that apply a CSS class depending on the cell value.
 
- 
-
 The pivot table widget can call a microflow when the user clicks on a cell.
 
- 
+Optionally, an export button can be shown which allows exporting the contents of the table as CSV.
 
 Have a look at the screen shots or download the Pivot Table Demo Project
 
@@ -48,6 +38,7 @@ Have a look at the screen shots or download the Pivot Table Demo Project
 - React to click events on the cells.
 - React to changes (commits) of the context object.
 - Apply styling thresholds to highlight certain values
+- Export the table data as CSV
 - Non-persistent entities are supported and actually preferred.
 - When the microflow returns an empty list no table will be rendered but a (configurable) text will be shown.
 - Only basic attributes are supported, no references. This is done to minimize the number of server roundtrips and keep the widget design as simple as possible.
@@ -142,6 +133,18 @@ When you create an association from the on click entity to the context entity, y
 
 
 **It is strongly advised to use a non-persistent entity for this purpose!**
+
+####Export as CSV
+The widget can export the table data as CSV. This does require a little work in the modeler. You will need to create the following:
+
+1. A non-persistent entity with an unlimited string attribute to hold the data.
+1. An entity that inherits from FileDocument to create the CSV file. 
+1. A microflow to do the actual export. This microflow receives an instance of the non-persistent entity with the CSV data and needs to do the following:
+	- Create an object of the entity that inherits from FileDocument. Unless the document needs to be kept, be sure to set DeleteAfterDownload to true.
+	- Use CommunityCommons.StringToFile to store the CSV data in the file document
+	- Use the Download File activity to actually download the file.
+
+The pivot table sample project contains microflow ExportCsvData that performs these actions.
 
 ##Known Bugs
  

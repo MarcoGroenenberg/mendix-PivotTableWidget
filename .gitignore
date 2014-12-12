@@ -1,4 +1,7 @@
-test/javasource/
+test/javasource/administration/
+test/javasource/com/
+test/javasource/system/
+test/.settings
 test/deployment/
 test/.classpath
 test/.project

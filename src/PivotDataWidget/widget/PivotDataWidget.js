@@ -37,6 +37,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     onClickYIdValue                 : null,
     onClickMendixObject             : null,
     onCellClickReferenceName        : null,
+    exportMendixObject              : null,
 
     /**
      * Called by the Mendix runtime after creation.
@@ -63,7 +64,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         var
             thisObj = this;
 
-        console.log(this.domNode.id + ": applyContext");
+        // console.log(this.domNode.id + ": applyContext");
 
         if (this.handle) {
             mx.data.unsubscribe(this.handle);
@@ -72,7 +73,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         if (context) {
             this.widgetContext = context;
             this.contextGUID = context.getTrackID();
-            console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
+            // console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
             if (this.checkProperties()) {
                 if (this.callGetDataMicroflow === "crtOnly" || this.callGetDataMicroflow === "crtAndChg") {
                     thisObj.getData();
@@ -95,7 +96,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     contextObjectChangedCallback: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": Context object has changed");
+        // console.log(this.domNode.id + ": Context object has changed");
         this.getData();
     },
 
@@ -105,7 +106,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     getData: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": Call microflow to get the data");
+        // console.log(this.domNode.id + ": Call microflow to get the data");
 
         if (this.getDataMicroflowCallPending) {
             // Prevent problems when Mendix runtime calls applyContext multiple times
@@ -138,7 +139,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         var
             noDataNode;
 
-        console.log(this.domNode.id + ": dataMicroflowCallback");
+        // console.log(this.domNode.id + ": dataMicroflowCallback");
 
         this.getDataMicroflowCallPending = false;
         this.hideProgress();
@@ -187,7 +188,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     checkProperties: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": checkProperties");
+        // console.log(this.domNode.id + ": checkProperties");
 
         var
             errorMessageArray = [],
@@ -257,6 +258,19 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
             }
         }
 
+        // When export is allowed export properties must be specified too
+        if (this.allowExport) {
+            if (this.exportToCsvEntity === "") {
+                errorMessageArray.push("When export is allowed, Export to CSV entity must be specified too");
+            }
+            if (this.exportToCsvMicroflow === "") {
+                errorMessageArray.push("When export is allowed, Export to CSV microflow must be specified too");
+            }
+            if (this.exportToCsvAttr === "") {
+                errorMessageArray.push("When export is allowed, Export to CSV attribute must be specified too");
+            }
+        }
+
         if (errorMessageArray.length > 0) {
             this.showConfigurationErrors(errorMessageArray);
         }
@@ -273,7 +287,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     checkData: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": checkData");
+        // console.log(this.domNode.id + ": checkData");
 
         var
             errorMessageArray = [];
@@ -445,7 +459,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     buildTableData: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": buildTableData");
+        // console.log(this.domNode.id + ": buildTableData");
 
         var
             mendixObject,
@@ -463,7 +477,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
             ySortValue,
             ySortValueMap = {};
 
-        console.log(this.domNode.id + ": Process Mendix object array");
+        // console.log(this.domNode.id + ": Process Mendix object array");
 
         for (mendixObjectIndex = 0; mendixObjectIndex < this.mendixObjectArray.length; mendixObjectIndex = mendixObjectIndex + 1) {
             mendixObject    = this.mendixObjectArray[mendixObjectIndex];
@@ -502,7 +516,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
             }
         }
 
-        console.log(this.domNode.id + ": Perform requested action on the data");
+        // console.log(this.domNode.id + ": Perform requested action on the data");
 
         for (cellMapKey in this.cellMap) {
             if (this.cellMap.hasOwnProperty(cellMapKey)) {
@@ -530,7 +544,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
             }
         }
 
-        console.log(this.domNode.id + ": Sort the X and Y axis data");
+        // console.log(this.domNode.id + ": Sort the X and Y axis data");
 
         if (this.xSortAttr === "label") {
             sortAttr = this.xLabelAttr;
@@ -604,19 +618,21 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     createTable: function () {
         'use strict';
 
-        console.log(this.domNode.id + ": createTable");
+        // console.log(this.domNode.id + ": createTable");
 
         var
             cellMapKey,
             cellMapObject,
             cellValue,
             colIndex,
+            exportButton,
             footerRowNode,
             headerRowNode,
             node,
             rowNode,
             rowIndex,
             tableNode,
+            topLeftCellNode,
             tresholdClass,
             tresholdCompareValue,
             tresholdIndex,
@@ -632,7 +648,18 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
         // Header row
         headerRowNode = document.createElement("tr");
-        headerRowNode.appendChild(document.createElement("th"));
+        topLeftCellNode = document.createElement("th");
+        if (this.allowExport) {
+            exportButton = document.createElement('button');
+            exportButton.setAttribute('type', 'button');
+            dojo.addClass(exportButton, 'btn mx-button btn-default ' + this.exportButtonClass);
+            if (this.exportButtonCaption) {
+                exportButton.innerHTML = this.exportButtonCaption;
+            }
+            exportButton.onclick = dojo.hitch(this, this.exportData);
+            topLeftCellNode.appendChild(exportButton);
+        }
+        headerRowNode.appendChild(topLeftCellNode);
         for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
             headerRowNode.appendChild(this.createHeaderNode(this.xKeyArray[colIndex].labelValue));
         }
@@ -829,8 +856,8 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
      */
     onClickCell : function (evt) {
         'use strict';
-        console.log("onClickCell");
-        console.dir(evt);
+        // console.log("onClickCell");
+        // console.dir(evt);
         this.onClickXIdValue = evt.target.getAttribute(this.xIdAttr);
         this.onClickYIdValue = evt.target.getAttribute(this.yIdAttr);
         mx.data.create({
@@ -848,14 +875,14 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     onClickCellObjectCreated : function (mendixObject) {
         'use strict';
 
-        console.log("onClickCellObjectCreated");
+        // console.log("onClickCellObjectCreated");
 
         mendixObject.set(this.onCellClickXIdAttr, this.onClickXIdValue);
         mendixObject.set(this.onCellClickYIdAttr, this.onClickYIdValue);
         if (this.onCellClickReferenceName) {
             mendixObject.addReference(this.onCellClickReferenceName, this.contextGUID);
         }
-        console.log("Commit object");
+        // console.log("Commit object");
         this.onClickMendixObject = mendixObject;
         mx.data.commit({
             mxobj    : mendixObject,
@@ -871,7 +898,7 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
     onClickMendixObjectCommitted : function () {
         'use strict';
 
-        console.log("onClickMendixObjectCommitted");
+        // console.log("onClickMendixObjectCommitted");
         mx.data.action({
             params       : {
                 applyto     : "selection",
@@ -923,7 +950,141 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
 
     },
 
+
     /**
+     * Called when the user requests an export of the data
+     *
+     * @param evt  The click event
+     */
+    exportData : function (evt) {
+        'use strict';
+        // console.log("exportData");
+        // console.dir(evt);
+        mx.data.create({
+            entity   : this.exportToCsvEntity,
+            callback : dojo.hitch(this, this.exportDataObjectCreated),
+            error    : dojo.hitch(this, this.exportDataObjectCreateError)
+        });
+    },
+
+    /**
+     * Called upon creation of exportToCsvEntity
+     *
+     * @param mendixObject  The new Mendix object
+     */
+    exportDataObjectCreated : function (mendixObject) {
+        'use strict';
+
+        // console.log("exportDataObjectCreated");
+        var
+            exportData = '',
+            useQuotes = true;
+
+        if (this.cellValueAction === "count") {
+            useQuotes = false;
+        } else {
+            if (this.cellValueAttrType !== "DateTime") {
+                useQuotes = false;
+            }
+        }
+
+        dojo.forEach(this.domNode.firstChild.childNodes, function (row, rowIndex) {
+            dojo.forEach(row.childNodes, function (cell, colIndex) {
+                if (rowIndex === 0) {
+                    if (colIndex === 0) {
+                        exportData += '""';
+                    } else {
+                        dojo.query('span', cell).forEach(function (headerNode) {
+                            exportData += ',"' + headerNode.innerHTML + '"';
+                        });
+                    }
+                } else {
+                    if (colIndex === 0) {
+                        exportData += '"' + cell.innerHTML + '"';
+                    } else {
+                        if (useQuotes) {
+                            exportData += ',"';
+                        } else {
+                            exportData += ',';
+                        }
+                        exportData += cell.innerHTML;
+                        if (useQuotes) {
+                            exportData += '"';
+                        }
+                    }
+                }
+            });
+            exportData += '\r\n';
+        });
+
+        mendixObject.set(this.exportToCsvAttr, exportData);
+        // console.log("Commit object");
+        this.exportMendixObject = mendixObject;
+        mx.data.commit({
+            mxobj    : mendixObject,
+            callback : dojo.hitch(this, this.exportMendixObjectCommitted),
+            error    : dojo.hitch(this, this.exportMendixObjectCommitError)
+        });
+    },
+
+    /**
+     * Called after creation of exportToCsvEntity failed
+     *
+     */
+    exportMendixObjectCommitted : function () {
+        'use strict';
+
+        // console.log("exportMendixObjectCommitted");
+        mx.data.action({
+            params       : {
+                applyto     : "selection",
+                actionname  : this.exportToCsvMicroflow,
+                guids : [this.exportMendixObject.getGuid()]
+            },
+            error        : dojo.hitch(this, this.exportDataMicroflowError),
+            onValidation : dojo.hitch(this, this.exportDataMicroflowError)
+        });
+
+    },
+
+    /**
+     * Called after creation of exportToCsvEntity failed
+     *
+     * @param err       The error object, if any
+     */
+    exportDataObjectCreateError : function (err) {
+        'use strict';
+
+        console.dir(err);
+        alert("Create object of entity " + this.exportToCsvEntity + " ended with an error");
+
+    },
+
+    /**
+     * Called after commit of exportToCsvEntity failed
+     *
+     * @param err       The error object, if any
+     */
+    exportMendixObjectCommitError : function (err) {
+        'use strict';
+
+        console.dir(err);
+        alert("Commit object of entity " + this.exportToCsvEntity + " ended with an error");
+
+    },
+
+    /**
+     * Call to exportData microflow failed
+     *
+     * @param err       The error object, if any
+     */
+    exportDataMicroflowError : function (err) {
+        'use strict';
+
+        console.dir(err);
+        alert("Call to microflow " + this.exportDataMicroflow + " ended with an error");
+
+    },    /**
      * Get the attribute value for use as sort key
      *
      * @param mendixObject  The Mendix object to take the value from
@@ -1078,36 +1239,13 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
         return result;
     },
 
-	/**
-	 * How the widget re-acts from actions invoked by the Mendix App.
-	 */
-	suspend : function () {
-		'use strict';
-        console.log(this.domNode.id + ": suspend");
-	},
-
-	resume : function () {
-		'use strict';
-        console.log(this.domNode.id + ": resume");
-	},
-
-	enable : function () {
-		'use strict';
-        console.log(this.domNode.id + ": enable");
-	},
-
-	disable : function () {
-		'use strict';
-        console.log(this.domNode.id + ": disable");
-	},
-
     /**
      * Cleanup upon destruction of the widget instance.
      *
      */
     uninitialize: function () {
         'use strict';
-        console.log(this.domNode.id + ": uninitialize");
+        // console.log(this.domNode.id + ": uninitialize");
         if (this.handle) {
             mx.data.unsubscribe(this.handle);
         }

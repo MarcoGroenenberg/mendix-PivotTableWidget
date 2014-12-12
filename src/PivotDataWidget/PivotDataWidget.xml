@@ -321,6 +321,49 @@
             <category>Styling</category>
             <description>On cell click CSS class. This is an additional class applied to each table cell when the on cell click microflow is configured</description>
         </property>
+        <property key="exportButtonClass" type="string" required="false">
+            <caption>Export button class</caption>
+            <category>Styling</category>
+            <description>Export button CSS class. This is an additional class applied to the export button. Only applicable when export is allowed.</description>
+        </property>
+        
+
+        <!-- CSV export properties -->
+
+        <property key="allowExport" type="boolean" defaultValue="false">
+            <caption>Allow export</caption>
+            <category>Configuration export</category>
+            <description>Allow export of the data to CSV format.</description>
+        </property>
+        <property key="exportButtonCaption" type="translatableString" required="false">
+            <caption>Export button caption</caption>
+            <category>Configuration export</category>
+            <description>Export button caption</description>
+            <translations>
+                <translation lang="en_GB">Export</translation>
+                <translation lang="en_US">Export</translation>
+                <translation lang="nl_NL">Exporteren</translation>
+            </translations>
+        </property>
+        <property key="exportToCsvEntity" type="entity" allowNonPersistableEntities="true" required="false">
+            <caption>Export to CSV entity</caption>
+            <category>Configuration export</category>
+            <description>The entity used for the export to CSV, the widget creates an object of this entity. It is recommended to use a non-persistent entity</description>
+        </property>
+        <property key="exportToCsvMicroflow" type="microflow" entityProperty="exportToCsvEntity" required="false">
+            <caption>Export to CSV microflow</caption>
+            <category>Configuration export</category>
+            <description>The microflow that can handle export of the data. It receives an object of the same type as the export to entity property.</description>
+            <returnType type="Void"></returnType>
+        </property>
+        <property key="exportToCsvAttr" type="attribute" entityProperty="exportToCsvEntity" required="false">
+            <caption>Export to CSV attribute</caption>
+            <category>Configuration export</category>
+            <description>The attribute to contain the data. Use an unlimited length string attribute.</description>
+            <attributeTypes>
+                <attributeType name="String"/>
+            </attributeTypes>
+        </property>        
 
     </properties>
 
