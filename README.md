@@ -119,6 +119,7 @@ Total row class | PivotDataWidgetTotalRow | Cell CSS class.
 Total row cell class | PivotDataWidgetTotalRowCellCenter | Cell CSS class.
 No data text class | PivotDataWidgetNoDataText | No data text CSS class.
 On cell click class | PivotDataWidgetCellClickable | On cell click CSS class. This is an additional class applied to each table cell when the on cell click microflow is configured
+Export button class | | Export button CSS class. This is an additional class applied to the export button.
 
 ###Styling thresholds
 
