@@ -994,20 +994,18 @@ dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase
                     if (colIndex === 0) {
                         exportData += '""';
                     } else {
-                        dojo.query('span', cell).forEach(function (headerNode) {
-                            exportData += ',"' + headerNode.innerHTML + '"';
-                        });
+                        exportData += ',"' + cell.textContent + '"';
                     }
                 } else {
                     if (colIndex === 0) {
-                        exportData += '"' + cell.innerHTML + '"';
+                        exportData += '"' + cell.textContent + '"';
                     } else {
                         if (useQuotes) {
                             exportData += ',"';
                         } else {
                             exportData += ',';
                         }
-                        exportData += cell.innerHTML;
+                        exportData += cell.textContent;
                         if (useQuotes) {
                             exportData += '"';
                         }
