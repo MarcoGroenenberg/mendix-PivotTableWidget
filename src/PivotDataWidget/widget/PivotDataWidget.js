@@ -1,1254 +1,1246 @@
-dojo.provide("PivotDataWidget.widget.PivotDataWidget");
+/*global mx, mxui, mendix, require, console, define, module, logger */
+/**
 
-dojo.declare('PivotDataWidget.widget.PivotDataWidget', [ mxui.widget._WidgetBase, mxui.mixin._Contextable ], {
+	PivotDataWidget
+	========================
 
-    widgetContext                   : null,
-    contextGUID                     : null,
-    getDataMicroflowCallPending     : null,
-    handle                          : null,
-    mendixObjectArray               : null,
-    cellMap                         : {},
-    xKeyArray                       : [],
-    yKeyArray                       : [],
-    entityMetaData                  : null,
-    progressDialogId                : null,
-    cellValueAttrType               : null,
-    validActionAttrTypeCombinations : [
-        "sum_Currency",
-        "sum_Float",
-        "sum_Integer",
-        "sum_Long",
-        "average_Currency",
-        "average_Float",
-        "average_Integer",
-        "average_Long",
-        "min_Currency",
-        "min_DateTime",
-        "min_Float",
-        "min_Integer",
-        "min_Long",
-        "max_Currency",
-        "max_DateTime",
-        "max_Float",
-        "max_Integer",
-        "max_Long"
-    ],
-    onClickXIdValue                 : null,
-    onClickYIdValue                 : null,
-    onClickMendixObject             : null,
-    onCellClickReferenceName        : null,
-    exportMendixObject              : null,
+	@file      : PivotDataWidget.js
+	@author    : Marcel Groeneweg
+	@date      : 22-12-2014
+	@copyright : Synobsys
+	@license   : Apache License, Version 2.0, January 2004
 
-    /**
-     * Called by the Mendix runtime after creation.
-     */
-    postCreate: function () {
-        'use strict';
-        dojo.addClass(this.domNode, "PivotDataWidget");
+	Documentation
+    ========================
+	Pivot table widget
 
-        // Load CSS ... automatically from ui directory
+*/
 
-        if (this.onCellClickReference) {
-            this.onCellClickReferenceName = this.onCellClickReference.substr(0, this.onCellClickReference.indexOf('/'));
-        }
-    },
+(function () {
+    'use strict';
 
-    /**
-     * Called by the Mendix runtime to make the context available
-     *
-     * @param context       The context to use
-     * @param callback      The callback to call when done accepting the context, may be null
-     */
-    applyContext: function (context, callback) {
-        'use strict';
-        var
-            thisObj = this;
+    require([
 
-        // console.log(this.domNode.id + ": applyContext");
+        'dojo/_base/declare', 'mxui/widget/_WidgetBase', 'dijit/_Widget',
+        'mxui/dom', 'dojo/dom-class', 'dojo/dom-construct', 'dojo/_base/lang', 'dojo/number', 'dojo/_base/array', 'dojo/date/locale'
 
-        if (this.handle) {
-            mx.data.unsubscribe(this.handle);
-        }
+    ], function (declare, _WidgetBase, _Widget, domMx, domClass, domConstruct, lang, dojoNumber, dojoArray, dojoDateLocale) {
 
-        if (context) {
-            this.widgetContext = context;
-            this.contextGUID = context.getTrackID();
-            // console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
-            if (this.checkProperties()) {
-                if (this.callGetDataMicroflow === "crtOnly" || this.callGetDataMicroflow === "crtAndChg") {
-                    thisObj.getData();
+        // Declare widget.
+        return declare('PivotDataWidget.widget.PivotDataWidget', [ _WidgetBase, _Widget ], {
+
+            widgetContext                   : null,
+            contextGUID                     : null,
+            getDataMicroflowCallPending     : null,
+            handle                          : null,
+            mendixObjectArray               : null,
+            cellMap                         : {},
+            xKeyArray                       : [],
+            yKeyArray                       : [],
+            entityMetaData                  : null,
+            progressDialogId                : null,
+            cellValueAttrType               : null,
+            validActionAttrTypeCombinations : [
+                "sum_Currency",
+                "sum_Float",
+                "sum_Integer",
+                "sum_Long",
+                "average_Currency",
+                "average_Float",
+                "average_Integer",
+                "average_Long",
+                "min_Currency",
+                "min_DateTime",
+                "min_Float",
+                "min_Integer",
+                "min_Long",
+                "max_Currency",
+                "max_DateTime",
+                "max_Float",
+                "max_Integer",
+                "max_Long"
+            ],
+            onClickXIdValue                 : null,
+            onClickYIdValue                 : null,
+            onClickMendixObject             : null,
+            onCellClickReferenceName        : null,
+            exportMendixObject              : null,
+
+            /**
+             * Called by the Mendix runtime after creation.
+             */
+            postCreate: function () {
+                domClass.add(this.domNode, "PivotDataWidget");
+
+                // Load CSS ... automatically from ui directory
+
+                if (this.onCellClickReference) {
+                    this.onCellClickReferenceName = this.onCellClickReference.substr(0, this.onCellClickReference.indexOf('/'));
                 }
-                if (this.callGetDataMicroflow === "crtAndChg" || this.callGetDataMicroflow === "chgOnly") {
-                    this.handle = mx.data.subscribe({
-                        guid: this.contextGUID,
-                        callback: dojo.hitch(this, this.contextObjectChangedCallback)
-                    });
-                }
-            }
-        } else {
-            alert(this.id + ".applyContext received empty context");
-        }
-        if (callback) {
-            callback();
-        }
-    },
-
-    contextObjectChangedCallback: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": Context object has changed");
-        this.getData();
-    },
-
-    /**
-     * Call the microflow to get the data
-     */
-    getData: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": Call microflow to get the data");
-
-        if (this.getDataMicroflowCallPending) {
-            // Prevent problems when Mendix runtime calls applyContext multiple times
-            // When the microflow commits the context object, we might go into an endless loop!
-            console.log(this.domNode.id + ": Skipped microflow call as we did not get an answer from a previous call.");
-            return;
-        }
-        this.getDataMicroflowCallPending = true;
-        this.showProgress();
-
-        var args = {
-            params: {
-                actionname: this.getDataMicroflow
             },
-            context: this.widgetContext,
-            callback: dojo.hitch(this, this.dataMicroflowCallback),
-            error: dojo.hitch(this, this.dataMicroflowError)
-        };
-        mx.data.action(args);
-    },
 
-    /**
-     * Called upon completion of the microflow
-     *
-     * @param mendixObjectArray      The list as returned from the microflow
-     */
-    dataMicroflowCallback: function (mendixObjectArray) {
-        'use strict';
+            /**
+             * Called by the Mendix runtime to make the context available
+             *
+             * @param context       The context to use
+             * @param callback      The callback to call when done accepting the context, may be null
+             */
+            applyContext: function (context, callback) {
+                var
+                    thisObj = this;
 
-        var
-            noDataNode;
+                // console.log(this.domNode.id + ": applyContext");
 
-        // console.log(this.domNode.id + ": dataMicroflowCallback");
+                if (this.handle) {
+                    mx.data.unsubscribe(this.handle);
+                }
 
-        this.getDataMicroflowCallPending = false;
-        this.hideProgress();
-
-        this.mendixObjectArray = mendixObjectArray;
-
-        // Remove any old data
-        dojo.empty(this.domNode);
-        this.cellMap        = {};
-        this.xKeyArray      = [];
-        this.yKeyArray      = [];
-
-        if (this.checkData()) {
-            if (this.mendixObjectArray.length > 0) {
-                this.buildTableData();
-                this.createTable();
-            } else {
-                noDataNode = mxui.dom.p(this.noDataText);
-                dojo.addClass(noDataNode, this.noDataTextClass);
-                this.domNode.appendChild(noDataNode);
-            }
-        }
-
-    },
-
-    /**
-     * Called when the microflow call ended with an error
-     *
-     * @param err       The error object, if any
-     */
-    dataMicroflowError: function (err) {
-        'use strict';
-
-        this.hideProgress();
-        this.getDataMicroflowCallPending = false;
-
-        console.dir(err);
-        alert("Call to microflow " + this.getDataMicroflow + " ended with an error");
-    },
-
-    /**
-     * Check whether the properties are set correctly.
-     *
-     * @returns {boolean}       True if properties are correct, false otherwise
-     */
-    checkProperties: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": checkProperties");
-
-        var
-            errorMessageArray = [],
-            minDateValue,
-            tresholdIndex;
-
-        // Check whether total row/column is allowed
-        if (this.cellValueAction !== "count" && this.cellValueAction !== "sum") {
-            // Total row/column only allowed for count and sum
-            if (this.showTotalColumn) {
-                errorMessageArray.push("Total column is only supported for count and sum");
-            }
-            if (this.showTotalRow) {
-                errorMessageArray.push("Total row is only supported for count and sum");
-            }
-        }
-
-        if (this.cellValueAction === "average") {
-            if (this.precisionForAverage < 0 || this.precisionForAverage > 10) {
-                errorMessageArray.push("Decimal precision for average must be between 0 and 10");
-            }
-        }
-
-        // These checks can be done only when there is no error on the microflow output
-        if (errorMessageArray.length === 0) {
-            this.entityMetaData = mx.meta.getEntity(this.entity);
-            this.cellValueAttrType = this.entityMetaData.getAttributeType(this.cellValueAttr);
-
-            if (this.cellValueAction !== "count") {
-                // For any action other than count, the attribute type must be specified and valid.
-                if (this.cellValueAttr === null || this.cellValueAttr === "") {
-                    errorMessageArray.push("Action " + this.cellValueAction + " requires a cell value attribute");
+                if (context) {
+                    this.widgetContext = context;
+                    this.contextGUID = context.getTrackID();
+                    // console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
+                    if (this.checkProperties()) {
+                        if (this.callGetDataMicroflow === "crtOnly" || this.callGetDataMicroflow === "crtAndChg") {
+                            thisObj.getData();
+                        }
+                        if (this.callGetDataMicroflow === "crtAndChg" || this.callGetDataMicroflow === "chgOnly") {
+                            this.handle = mx.data.subscribe({
+                                guid: this.contextGUID,
+                                callback: lang.hitch(this, this.contextObjectChangedCallback)
+                            });
+                        }
+                    }
                 } else {
-                    if (this.validActionAttrTypeCombinations.indexOf(this.cellValueAction + "_" + this.cellValueAttrType) < 0) {
-                        errorMessageArray.push("Action " + this.cellValueAction + " cannot be used on " + this.cellValueAttr);
-                    }
+                    alert(this.id + ".applyContext received empty context");
                 }
-            }
-
-            if (this.tresholdList && this.tresholdList.length) {
-                for (tresholdIndex = 0; tresholdIndex < this.tresholdList.length; tresholdIndex = tresholdIndex + 1) {
-                    // The property value is always a string, convert it to a value that can be used for comparison
-                    switch (this.cellValueAttrType) {
-                    case "DateTime":
-                        minDateValue = this.parseDate(this.tresholdList[tresholdIndex].minValue, this.cellValueDateformat);
-                        this.tresholdList[tresholdIndex].minValue = Number(minDateValue);
-                        break;
-
-                    default:
-                        this.tresholdList[tresholdIndex].minValue = Number(this.tresholdList[tresholdIndex].minValue);
-                    }
+                if (callback) {
+                    callback();
                 }
-            }
-        }
+            },
 
-        // When onCellClick microflow is specified, the other onCellClick properties must be specified too
-        if (this.onCellClickMicroflow !== "") {
-            if (this.onCellClickEntity === "") {
-                errorMessageArray.push("When On cell click microflow is specified, On cell click entity must be specified too");
-            }
-            if (this.onCellClickXIdAttr === "") {
-                errorMessageArray.push("When On cell click microflow is specified, On cell click X-axis ID attribute must be specified too");
-            }
+            contextObjectChangedCallback: function () {
 
-            if (this.onCellClickYIdAttr === "") {
-                errorMessageArray.push("When On cell click microflow is specified, On cell click Y-axis ID attribute must be specified too");
-            }
-        }
+                // console.log(this.domNode.id + ": Context object has changed");
+                this.getData();
+            },
 
-        // When export is allowed export properties must be specified too
-        if (this.allowExport) {
-            if (this.exportToCsvEntity === "") {
-                errorMessageArray.push("When export is allowed, Export to CSV entity must be specified too");
-            }
-            if (this.exportToCsvMicroflow === "") {
-                errorMessageArray.push("When export is allowed, Export to CSV microflow must be specified too");
-            }
-            if (this.exportToCsvAttr === "") {
-                errorMessageArray.push("When export is allowed, Export to CSV attribute must be specified too");
-            }
-        }
+            /**
+             * Call the microflow to get the data
+             */
+            getData: function () {
 
-        if (errorMessageArray.length > 0) {
-            this.showConfigurationErrors(errorMessageArray);
-        }
+                // console.log(this.domNode.id + ": Call microflow to get the data");
 
-        return (errorMessageArray.length === 0);
-    },
-
-
-    /**
-     * Check whether the returned data is correct.
-     *
-     * @returns {boolean}       True if correct, false otherwise
-     */
-    checkData: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": checkData");
-
-        var
-            errorMessageArray = [];
-
-        if (this.mendixObjectArray !== null) {
-            if (Object.prototype.toString.call(this.mendixObjectArray) === "[object Array]") {
-                if (this.mendixObjectArray.length > 0 && this.mendixObjectArray[0].getEntity() !== this.entity) {
-                    errorMessageArray.push("Microflow " + this.getDataMicroflow + " returns a list of " + this.mendixObjectArray[0].getEntity() +
-                        " while the entity property is set to " + this.entity);
+                if (this.getDataMicroflowCallPending) {
+                    // Prevent problems when Mendix runtime calls applyContext multiple times
+                    // When the microflow commits the context object, we might go into an endless loop!
+                    console.log(this.domNode.id + ": Skipped microflow call as we did not get an answer from a previous call.");
+                    return;
                 }
-            } else {
-                errorMessageArray.push("Microflow " + this.getDataMicroflow + " does not return a list of objects");
-            }
-        } else {
-            errorMessageArray.push("Microflow " + this.getDataMicroflow + " does not return a list of objects");
-        }
+                this.getDataMicroflowCallPending = true;
+                this.showProgress();
 
-        if (errorMessageArray.length > 0) {
-            this.showConfigurationErrors(errorMessageArray);
-        }
-
-        return (errorMessageArray.length === 0);
-    },
-
-    showConfigurationErrors: function (errorMessageArray) {
-        'use strict';
-
-        var
-            i,
-            listNode;
-
-        this.domNode.appendChild(mxui.dom.p("Configuration error(s) found"));
-        dojo.addClass(this.domNode, "PivotDataWidgetConfigurationError");
-        listNode = document.createElement("ul");
-        for (i = 0; i < errorMessageArray.length; i = i + 1) {
-            listNode.appendChild(mxui.dom.li(errorMessageArray[i]));
-        }
-        this.domNode.appendChild(listNode);
-    },
-
-
-    /**
-     * Count action
-     *
-     * @param valueArray    The value array from the cell map
-     * @returns cell value
-     */
-    getCellElementCount: function (valueArray) {
-        'use strict';
-
-        return valueArray.length;
-    },
-
-    /**
-     * Sum action
-     *
-     * @param valueArray    The value array from the cell map
-     * @returns cell value
-     */
-    getCellSum: function (valueArray) {
-        'use strict';
-
-        var
-            i,
-            result,
-            sum = 0;
-
-        for (i = 0; i < valueArray.length; i = i + 1) {
-            sum = sum + valueArray[i];
-        }
-
-        result = sum;
-
-        return result;
-    },
-
-    /**
-     * Average action
-     *
-     * @param valueArray    The value array from the cell map
-     * @returns cell value
-     */
-    getCellAverage: function (valueArray) {
-        'use strict';
-
-        var
-            average,
-            result;
-
-        average = this.getCellSum(valueArray) / valueArray.length;
-
-        result = average;
-
-        return result;
-    },
-
-    /**
-     * Min action
-     *
-     * @param valueArray    The value array from the cell map
-     * @returns cell value
-     */
-    getCellMin: function (valueArray) {
-        'use strict';
-
-        var
-            i,
-            minValue = null,
-            result,
-            value;
-
-        for (i = 0; i < valueArray.length; i = i + 1) {
-            value = valueArray[i];
-            if (minValue === null || value < minValue) {
-                minValue = value;
-            }
-        }
-
-        switch (this.cellValueAttrType) {
-        case "DateTime":
-            result = this.formatDateFromNumber(minValue, this.cellValueDateformat);
-            break;
-
-        default:
-            result = minValue;
-        }
-
-        return result;
-    },
-
-
-    /**
-     * Max action
-     *
-     * @param valueArray    The value array from the cell map
-     * @returns cell value
-     */
-    getCellMax: function (valueArray) {
-        'use strict';
-
-        var
-            i,
-            maxValue = null,
-            result,
-            value;
-
-        for (i = 0; i < valueArray.length; i = i + 1) {
-            value = valueArray[i];
-            if (maxValue === null || value > maxValue) {
-                maxValue = value;
-            }
-        }
-
-        switch (this.cellValueAttrType) {
-        case "DateTime":
-            result = this.formatDateFromNumber(maxValue, this.cellValueDateformat);
-            break;
-
-        default:
-            result = maxValue;
-        }
-
-        return result;
-    },
-
-    /**
-     * Build table data
-     */
-    buildTableData: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": buildTableData");
-
-        var
-            mendixObject,
-            mendixObjectIndex,
-            cellMapKey,
-            cellMapObject,
-            cellValue,
-            sortAttr,
-            xIdValue,
-            xLabelValue,
-            xSortValue,
-            xSortValueMap = {},
-            yIdValue,
-            yLabelValue,
-            ySortValue,
-            ySortValueMap = {};
-
-        // console.log(this.domNode.id + ": Process Mendix object array");
-
-        for (mendixObjectIndex = 0; mendixObjectIndex < this.mendixObjectArray.length; mendixObjectIndex = mendixObjectIndex + 1) {
-            mendixObject    = this.mendixObjectArray[mendixObjectIndex];
-            cellValue       = this.getSortKey(mendixObject, this.cellValueAttr);
-            xIdValue        = this.getSortKey(mendixObject, this.xIdAttr);
-            yIdValue        = this.getSortKey(mendixObject, this.yIdAttr);
-            xLabelValue     = this.getDisplayValue(mendixObject, this.xLabelAttr, this.xLabelDateformat);
-            yLabelValue     = this.getDisplayValue(mendixObject, this.yLabelAttr, this.yLabelDateformat);
-            if (this.xSortAttr === "label") {
-                xSortValue  = xLabelValue;
-            } else {
-                xSortValue  = xIdValue;
-            }
-            if (this.ySortAttr === "label") {
-                ySortValue  = yLabelValue;
-            } else {
-                ySortValue  = yIdValue;
-            }
-            cellMapKey      = xIdValue + "_" + yIdValue;
-            if (this.cellMap[cellMapKey]) {
-                cellMapObject = this.cellMap[cellMapKey];
-                cellMapObject.cellValueArray.push(cellValue);
-            } else {
-                cellMapObject = {
-                    xIdValue        : xIdValue,
-                    yIdValue        : yIdValue,
-                    cellValueArray  : [cellValue]
+                var args = {
+                    params: {
+                        actionname: this.getDataMicroflow
+                    },
+                    context: this.widgetContext,
+                    callback: lang.hitch(this, this.dataMicroflowCallback),
+                    error: lang.hitch(this, this.dataMicroflowError)
                 };
-                this.cellMap[cellMapKey] = cellMapObject;
-            }
-            if (!xSortValueMap[xSortValue]) {
-                xSortValueMap[xSortValue] = { idValue : xIdValue, labelValue : xLabelValue};
-            }
-            if (!ySortValueMap[ySortValue]) {
-                ySortValueMap[ySortValue] = { idValue : yIdValue, labelValue : yLabelValue};
-            }
-        }
+                mx.data.action(args);
+            },
 
-        // console.log(this.domNode.id + ": Perform requested action on the data");
+            /**
+             * Called upon completion of the microflow
+             *
+             * @param mendixObjectArray      The list as returned from the microflow
+             */
+            dataMicroflowCallback: function (mendixObjectArray) {
 
-        for (cellMapKey in this.cellMap) {
-            if (this.cellMap.hasOwnProperty(cellMapKey)) {
-                cellMapObject = this.cellMap[cellMapKey];
-                switch (this.cellValueAction) {
-                case "sum":
-                    cellMapObject.cellValue = this.getCellSum(cellMapObject.cellValueArray);
-                    break;
+                var
+                    noDataNode;
 
-                case "average":
-                    cellMapObject.cellValue = this.getCellAverage(cellMapObject.cellValueArray);
-                    break;
+                // console.log(this.domNode.id + ": dataMicroflowCallback");
 
-                case "min":
-                    cellMapObject.cellValue = this.getCellMin(cellMapObject.cellValueArray);
-                    break;
+                this.getDataMicroflowCallPending = false;
+                this.hideProgress();
 
-                case "max":
-                    cellMapObject.cellValue = this.getCellMax(cellMapObject.cellValueArray);
-                    break;
+                this.mendixObjectArray = mendixObjectArray;
 
-                default:
-                    cellMapObject.cellValue = this.getCellElementCount(cellMapObject.cellValueArray);
+                // Remove any old data
+                domConstruct.empty(this.domNode);
+                this.cellMap        = {};
+                this.xKeyArray      = [];
+                this.yKeyArray      = [];
+
+                if (this.checkData()) {
+                    if (this.mendixObjectArray.length > 0) {
+                        this.buildTableData();
+                        this.createTable();
+                    } else {
+                        noDataNode = mxui.dom.p(this.noDataText);
+                        domClass.add(noDataNode, this.noDataTextClass);
+                        this.domNode.appendChild(noDataNode);
+                    }
                 }
-            }
-        }
 
-        // console.log(this.domNode.id + ": Sort the X and Y axis data");
+            },
 
-        if (this.xSortAttr === "label") {
-            sortAttr = this.xLabelAttr;
-        } else {
-            sortAttr = this.xIdAttr;
-        }
-        this.xKeyArray = this.sortAxisData(xSortValueMap, sortAttr, this.xSortDirection);
+            /**
+             * Called when the microflow call ended with an error
+             *
+             * @param err       The error object, if any
+             */
+            dataMicroflowError: function (err) {
 
-        if (this.ySortAttr === "label") {
-            sortAttr = this.yLabelAttr;
-        } else {
-            sortAttr = this.yIdAttr;
-        }
-        this.yKeyArray = this.sortAxisData(ySortValueMap, sortAttr, this.ySortDirection);
+                this.hideProgress();
+                this.getDataMicroflowCallPending = false;
 
-    },
+                console.dir(err);
+                alert("Call to microflow " + this.getDataMicroflow + " ended with an error");
+            },
 
-    /**
-     * Sort the axis data
-     *
-     * @param sortValueMap      The data to sort
-     * @param sortAttr          The name of the sort attribute
-     * @param sortDirection     The sort direction
-     * @returns                 Sorted array
-     */
-    sortAxisData : function (sortValueMap, sortAttr, sortDirection) {
-        'use strict';
+            /**
+             * Check whether the properties are set correctly.
+             *
+             * @returns {boolean}       True if properties are correct, false otherwise
+             */
+            checkProperties: function () {
 
-        var
-            arrayIndex,
-            attrType,
-            axisDataArray = [],
-            keyArray,
-            sortKey,
-            sortObject;
+                // console.log(this.domNode.id + ": checkProperties");
 
-        attrType = this.entityMetaData.getAttributeType(sortAttr);
-        switch (attrType) {
-        case "AutoNumber":
-        case "Integer":
-        case "Long":
-        case "Currency":
-        case "Float":
-            keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a - b; });
-            break;
+                var
+                    errorMessageArray = [],
+                    minDateValue,
+                    tresholdIndex;
 
-        case "DateTime":
-            keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a.getTime() - b.getTime(); });
-            break;
+                // Check whether total row/column is allowed
+                if (this.cellValueAction !== "count" && this.cellValueAction !== "sum") {
+                    // Total row/column only allowed for count and sum
+                    if (this.showTotalColumn) {
+                        errorMessageArray.push("Total column is only supported for count and sum");
+                    }
+                    if (this.showTotalRow) {
+                        errorMessageArray.push("Total row is only supported for count and sum");
+                    }
+                }
 
-        default:
-            keyArray = Object.keys(sortValueMap).sort();
-        }
+                if (this.cellValueAction === "average") {
+                    if (this.precisionForAverage < 0 || this.precisionForAverage > 10) {
+                        errorMessageArray.push("Decimal precision for average must be between 0 and 10");
+                    }
+                }
 
-        if (sortDirection === "desc") {
-            keyArray.reverse();
-        }
+                // These checks can be done only when there is no error on the microflow output
+                if (errorMessageArray.length === 0) {
+                    this.entityMetaData = mx.meta.getEntity(this.entity);
+                    this.cellValueAttrType = this.entityMetaData.getAttributeType(this.cellValueAttr);
 
-        for (arrayIndex = 0; arrayIndex < keyArray.length; arrayIndex = arrayIndex + 1) {
-            sortKey = keyArray[arrayIndex];
-            sortObject = sortValueMap[sortKey];
-            axisDataArray.push(sortObject);
-        }
+                    if (this.cellValueAction !== "count") {
+                        // For any action other than count, the attribute type must be specified and valid.
+                        if (this.cellValueAttr === null || this.cellValueAttr === "") {
+                            errorMessageArray.push("Action " + this.cellValueAction + " requires a cell value attribute");
+                        } else {
+                            if (this.validActionAttrTypeCombinations.indexOf(this.cellValueAction + "_" + this.cellValueAttrType) < 0) {
+                                errorMessageArray.push("Action " + this.cellValueAction + " cannot be used on " + this.cellValueAttr);
+                            }
+                        }
+                    }
 
-        return axisDataArray;
-    },
-
-    /**
-     * Create the table
-     */
-    createTable: function () {
-        'use strict';
-
-        // console.log(this.domNode.id + ": createTable");
-
-        var
-            cellMapKey,
-            cellMapObject,
-            cellValue,
-            colIndex,
-            exportButton,
-            footerRowNode,
-            headerRowNode,
-            node,
-            rowNode,
-            rowIndex,
-            tableNode,
-            topLeftCellNode,
-            tresholdClass,
-            tresholdCompareValue,
-            tresholdIndex,
-            xTotalsMap = {},
-            xIdValue,
-            xTotal,
-            yIdValue,
-            yLabelValue,
-            yTotal;
-
-        // Create table
-        tableNode = document.createElement("table");
-
-        // Header row
-        headerRowNode = document.createElement("tr");
-        topLeftCellNode = document.createElement("th");
-        if (this.allowExport) {
-            exportButton = document.createElement('button');
-            exportButton.setAttribute('type', 'button');
-            dojo.addClass(exportButton, 'btn mx-button btn-default ' + this.exportButtonClass);
-            if (this.exportButtonCaption) {
-                exportButton.innerHTML = this.exportButtonCaption;
-            }
-            exportButton.onclick = dojo.hitch(this, this.exportData);
-            topLeftCellNode.appendChild(exportButton);
-        }
-        headerRowNode.appendChild(topLeftCellNode);
-        for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
-            headerRowNode.appendChild(this.createHeaderNode(this.xKeyArray[colIndex].labelValue));
-        }
-        if (this.showTotalColumn) {
-            headerRowNode.appendChild(this.createHeaderNode(this.totalColumnLabel));
-        }
-        tableNode.appendChild(headerRowNode);
-
-        // Rows
-        for (rowIndex = 0; rowIndex < this.yKeyArray.length; rowIndex = rowIndex + 1) {
-            rowNode = document.createElement("tr");
-            if (rowIndex % 2 === 0) {
-                dojo.addClass(rowNode, this.evenRowClass);
-            } else {
-                dojo.addClass(rowNode, this.oddRowClass);
-            }
-
-            // Get the label and the ID
-            yLabelValue = this.yKeyArray[rowIndex].labelValue;
-            yIdValue = this.yKeyArray[rowIndex].idValue;
-
-            // The row label
-            node = mxui.dom.th(yLabelValue);
-            dojo.addClass(node, this.yLabelClass);
-            rowNode.appendChild(node);
-
-            // Columns
-            yTotal = 0;
-            for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
-                // Get the ID
-                xIdValue            = this.xKeyArray[colIndex].idValue;
-                cellMapKey          = xIdValue + "_" + yIdValue;
-                // It is possible that no values exists for a given combination of the two IDs
-                tresholdClass = null;
-                if (this.cellMap[cellMapKey]) {
-                    cellMapObject   = this.cellMap[cellMapKey];
-                    cellValue       = cellMapObject.cellValue;
-                    // Process the styling tresholds, if requested
                     if (this.tresholdList && this.tresholdList.length) {
                         for (tresholdIndex = 0; tresholdIndex < this.tresholdList.length; tresholdIndex = tresholdIndex + 1) {
+                            // The property value is always a string, convert it to a value that can be used for comparison
                             switch (this.cellValueAttrType) {
                             case "DateTime":
-                                tresholdCompareValue = this.parseDate(cellValue, this.cellValueDateformat);
+                                minDateValue = this.parseDate(this.tresholdList[tresholdIndex].minValue, this.cellValueDateformat);
+                                this.tresholdList[tresholdIndex].minValue = Number(minDateValue);
                                 break;
 
                             default:
-                                tresholdCompareValue = cellValue;
-                            }
-                            if (tresholdCompareValue >= this.tresholdList[tresholdIndex].minValue) {
-                                tresholdClass = this.tresholdList[tresholdIndex].additionalClass;
-                            } else {
-                                break;
+                                this.tresholdList[tresholdIndex].minValue = Number(this.tresholdList[tresholdIndex].minValue);
                             }
                         }
                     }
-                    // Process the totals, if requested
-                    if (this.showTotalColumn) {
-                        yTotal       = yTotal + cellValue;
+                }
+
+                // When onCellClick microflow is specified, the other onCellClick properties must be specified too
+                if (this.onCellClickMicroflow !== "") {
+                    if (this.onCellClickEntity === "") {
+                        errorMessageArray.push("When On cell click microflow is specified, On cell click entity must be specified too");
                     }
-                    if (this.showTotalRow) {
-                        if (xTotalsMap[xIdValue]) {
-                            xTotal = xTotalsMap[xIdValue] + cellValue;
-                        } else {
-                            xTotal = cellValue;
+                    if (this.onCellClickXIdAttr === "") {
+                        errorMessageArray.push("When On cell click microflow is specified, On cell click X-axis ID attribute must be specified too");
+                    }
+
+                    if (this.onCellClickYIdAttr === "") {
+                        errorMessageArray.push("When On cell click microflow is specified, On cell click Y-axis ID attribute must be specified too");
+                    }
+                }
+
+                // When export is allowed export properties must be specified too
+                if (this.allowExport) {
+                    if (this.exportToCsvEntity === "") {
+                        errorMessageArray.push("When export is allowed, Export to CSV entity must be specified too");
+                    }
+                    if (this.exportToCsvMicroflow === "") {
+                        errorMessageArray.push("When export is allowed, Export to CSV microflow must be specified too");
+                    }
+                    if (this.exportToCsvAttr === "") {
+                        errorMessageArray.push("When export is allowed, Export to CSV attribute must be specified too");
+                    }
+                }
+
+                if (errorMessageArray.length > 0) {
+                    this.showConfigurationErrors(errorMessageArray);
+                }
+
+                return (errorMessageArray.length === 0);
+            },
+
+
+            /**
+             * Check whether the returned data is correct.
+             *
+             * @returns {boolean}       True if correct, false otherwise
+             */
+            checkData: function () {
+
+                // console.log(this.domNode.id + ": checkData");
+
+                var
+                    errorMessageArray = [];
+
+                if (this.mendixObjectArray !== null) {
+                    if (Object.prototype.toString.call(this.mendixObjectArray) === "[object Array]") {
+                        if (this.mendixObjectArray.length > 0 && this.mendixObjectArray[0].getEntity() !== this.entity) {
+                            errorMessageArray.push("Microflow " + this.getDataMicroflow + " returns a list of " + this.mendixObjectArray[0].getEntity() +
+                                " while the entity property is set to " + this.entity);
                         }
-                        xTotalsMap[xIdValue] = xTotal;
+                    } else {
+                        errorMessageArray.push("Microflow " + this.getDataMicroflow + " does not return a list of objects");
                     }
                 } else {
-                    cellValue       = "&nbsp;";
+                    errorMessageArray.push("Microflow " + this.getDataMicroflow + " does not return a list of objects");
                 }
-                node                = document.createElement("td");
+
+                if (errorMessageArray.length > 0) {
+                    this.showConfigurationErrors(errorMessageArray);
+                }
+
+                return (errorMessageArray.length === 0);
+            },
+
+            showConfigurationErrors: function (errorMessageArray) {
+
+                var
+                    i,
+                    listNode;
+
+                this.domNode.appendChild(mxui.dom.p("Configuration error(s) found"));
+                domClass.add(this.domNode, "PivotDataWidgetConfigurationError");
+                listNode = document.createElement("ul");
+                for (i = 0; i < errorMessageArray.length; i = i + 1) {
+                    listNode.appendChild(mxui.dom.li(errorMessageArray[i]));
+                }
+                this.domNode.appendChild(listNode);
+            },
+
+
+            /**
+             * Count action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellElementCount: function (valueArray) {
+
+                return valueArray.length;
+            },
+
+            /**
+             * Sum action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellSum: function (valueArray) {
+
+                var
+                    i,
+                    result,
+                    sum = 0;
+
+                for (i = 0; i < valueArray.length; i = i + 1) {
+                    sum = sum + valueArray[i];
+                }
+
+                result = sum;
+
+                return result;
+            },
+
+            /**
+             * Average action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellAverage: function (valueArray) {
+
+                var
+                    average,
+                    result;
+
+                average = this.getCellSum(valueArray) / valueArray.length;
+
+                result = average;
+
+                return result;
+            },
+
+            /**
+             * Min action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellMin: function (valueArray) {
+
+                var
+                    i,
+                    minValue = null,
+                    result,
+                    value;
+
+                for (i = 0; i < valueArray.length; i = i + 1) {
+                    value = valueArray[i];
+                    if (minValue === null || value < minValue) {
+                        minValue = value;
+                    }
+                }
+
                 switch (this.cellValueAttrType) {
-                case "Currency":
-                    node.innerHTML = this.formatCurrency(cellValue);
+                case "DateTime":
+                    result = this.formatDateFromNumber(minValue, this.cellValueDateformat);
                     break;
 
+                default:
+                    result = minValue;
+                }
+
+                return result;
+            },
+
+
+            /**
+             * Max action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellMax: function (valueArray) {
+
+                var
+                    i,
+                    maxValue = null,
+                    result,
+                    value;
+
+                for (i = 0; i < valueArray.length; i = i + 1) {
+                    value = valueArray[i];
+                    if (maxValue === null || value > maxValue) {
+                        maxValue = value;
+                    }
+                }
+
+                switch (this.cellValueAttrType) {
+                case "DateTime":
+                    result = this.formatDateFromNumber(maxValue, this.cellValueDateformat);
+                    break;
+
+                default:
+                    result = maxValue;
+                }
+
+                return result;
+            },
+
+            /**
+             * Build table data
+             */
+            buildTableData: function () {
+
+                // console.log(this.domNode.id + ": buildTableData");
+
+                var
+                    mendixObject,
+                    mendixObjectIndex,
+                    cellMapKey,
+                    cellMapObject,
+                    cellValue,
+                    sortAttr,
+                    xIdValue,
+                    xLabelValue,
+                    xSortValue,
+                    xSortValueMap = {},
+                    yIdValue,
+                    yLabelValue,
+                    ySortValue,
+                    ySortValueMap = {};
+
+                // console.log(this.domNode.id + ": Process Mendix object array");
+
+                for (mendixObjectIndex = 0; mendixObjectIndex < this.mendixObjectArray.length; mendixObjectIndex = mendixObjectIndex + 1) {
+                    mendixObject    = this.mendixObjectArray[mendixObjectIndex];
+                    cellValue       = this.getSortKey(mendixObject, this.cellValueAttr);
+                    xIdValue        = this.getSortKey(mendixObject, this.xIdAttr);
+                    yIdValue        = this.getSortKey(mendixObject, this.yIdAttr);
+                    xLabelValue     = this.getDisplayValue(mendixObject, this.xLabelAttr, this.xLabelDateformat);
+                    yLabelValue     = this.getDisplayValue(mendixObject, this.yLabelAttr, this.yLabelDateformat);
+                    if (this.xSortAttr === "label") {
+                        xSortValue  = xLabelValue;
+                    } else {
+                        xSortValue  = xIdValue;
+                    }
+                    if (this.ySortAttr === "label") {
+                        ySortValue  = yLabelValue;
+                    } else {
+                        ySortValue  = yIdValue;
+                    }
+                    cellMapKey      = xIdValue + "_" + yIdValue;
+                    if (this.cellMap[cellMapKey]) {
+                        cellMapObject = this.cellMap[cellMapKey];
+                        cellMapObject.cellValueArray.push(cellValue);
+                    } else {
+                        cellMapObject = {
+                            xIdValue        : xIdValue,
+                            yIdValue        : yIdValue,
+                            cellValueArray  : [cellValue]
+                        };
+                        this.cellMap[cellMapKey] = cellMapObject;
+                    }
+                    if (!xSortValueMap[xSortValue]) {
+                        xSortValueMap[xSortValue] = { idValue : xIdValue, labelValue : xLabelValue};
+                    }
+                    if (!ySortValueMap[ySortValue]) {
+                        ySortValueMap[ySortValue] = { idValue : yIdValue, labelValue : yLabelValue};
+                    }
+                }
+
+                // console.log(this.domNode.id + ": Perform requested action on the data");
+
+                for (cellMapKey in this.cellMap) {
+                    if (this.cellMap.hasOwnProperty(cellMapKey)) {
+                        cellMapObject = this.cellMap[cellMapKey];
+                        switch (this.cellValueAction) {
+                        case "sum":
+                            cellMapObject.cellValue = this.getCellSum(cellMapObject.cellValueArray);
+                            break;
+
+                        case "average":
+                            cellMapObject.cellValue = this.getCellAverage(cellMapObject.cellValueArray);
+                            break;
+
+                        case "min":
+                            cellMapObject.cellValue = this.getCellMin(cellMapObject.cellValueArray);
+                            break;
+
+                        case "max":
+                            cellMapObject.cellValue = this.getCellMax(cellMapObject.cellValueArray);
+                            break;
+
+                        default:
+                            cellMapObject.cellValue = this.getCellElementCount(cellMapObject.cellValueArray);
+                        }
+                    }
+                }
+
+                // console.log(this.domNode.id + ": Sort the X and Y axis data");
+
+                if (this.xSortAttr === "label") {
+                    sortAttr = this.xLabelAttr;
+                } else {
+                    sortAttr = this.xIdAttr;
+                }
+                this.xKeyArray = this.sortAxisData(xSortValueMap, sortAttr, this.xSortDirection);
+
+                if (this.ySortAttr === "label") {
+                    sortAttr = this.yLabelAttr;
+                } else {
+                    sortAttr = this.yIdAttr;
+                }
+                this.yKeyArray = this.sortAxisData(ySortValueMap, sortAttr, this.ySortDirection);
+
+            },
+
+            /**
+             * Sort the axis data
+             *
+             * @param sortValueMap      The data to sort
+             * @param sortAttr          The name of the sort attribute
+             * @param sortDirection     The sort direction
+             * @returns                 Sorted array
+             */
+            sortAxisData : function (sortValueMap, sortAttr, sortDirection) {
+
+                var
+                    arrayIndex,
+                    attrType,
+                    axisDataArray = [],
+                    keyArray,
+                    sortKey,
+                    sortObject;
+
+                attrType = this.entityMetaData.getAttributeType(sortAttr);
+                switch (attrType) {
+                case "AutoNumber":
                 case "Integer":
                 case "Long":
-                    node.innerHTML = dojo.number.format(cellValue, { places: this.precisionForAverage });
-                    break;
-
-                default:
-                    node.innerHTML      = cellValue;
-                }
-                dojo.addClass(node, this.cellClass);
-                if (this.onCellClickMicroflow !== "") {
-                    node.setAttribute(this.xIdAttr, xIdValue);
-                    node.setAttribute(this.yIdAttr, yIdValue);
-                    dojo.addClass(node, this.onCellClickClass);
-                    node.onclick = dojo.hitch(this, this.onClickCell);
-                }
-                // Additional class based on the treshold?
-                if (tresholdClass) {
-                    dojo.addClass(node, tresholdClass);
-                }
-                rowNode.appendChild(node);
-            }
-            if (this.showTotalColumn) {
-                node                = document.createElement("td");
-                switch (this.cellValueAttrType) {
                 case "Currency":
-                    node.innerHTML = this.formatCurrency(yTotal);
+                case "Float":
+                    keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a - b; });
+                    break;
+
+                case "DateTime":
+                    keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a.getTime() - b.getTime(); });
                     break;
 
                 default:
-                    node.innerHTML      = yTotal;
+                    keyArray = Object.keys(sortValueMap).sort();
                 }
-                dojo.addClass(node, this.totalColumnCellClass);
-                rowNode.appendChild(node);
-            }
 
-            tableNode.appendChild(rowNode);
-        }
-
-        if (this.showTotalRow) {
-            // Footer row containing the totals for each column
-            footerRowNode = document.createElement("tr");
-            dojo.addClass(footerRowNode, this.totalRowClass);
-            node = mxui.dom.td(this.totalRowLabel);
-            dojo.addClass(node, this.yLabelClass);
-            footerRowNode.appendChild(node);
-            yTotal = 0;
-            for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
-                // Get the ID
-                xIdValue            = this.xKeyArray[colIndex].idValue;
-                cellValue           = xTotalsMap[xIdValue];
-                yTotal              = yTotal + cellValue;
-                node                = document.createElement("td");
-                switch (this.cellValueAttrType) {
-                case "Currency":
-                    node.innerHTML = this.formatCurrency(cellValue);
-                    break;
-
-                default:
-                    node.innerHTML      = cellValue;
+                if (sortDirection === "desc") {
+                    keyArray.reverse();
                 }
-                dojo.addClass(node, this.totalRowCellClass);
-                footerRowNode.appendChild(node);
-            }
-            node                = document.createElement("td");
-            switch (this.cellValueAttrType) {
-            case "Currency":
-                node.innerHTML = this.formatCurrency(yTotal);
-                break;
 
-            default:
-                node.innerHTML      = yTotal;
-            }
-            dojo.addClass(node, this.totalRowCellClass);
-            footerRowNode.appendChild(node);
+                for (arrayIndex = 0; arrayIndex < keyArray.length; arrayIndex = arrayIndex + 1) {
+                    sortKey = keyArray[arrayIndex];
+                    sortObject = sortValueMap[sortKey];
+                    axisDataArray.push(sortObject);
+                }
 
-            tableNode.appendChild(footerRowNode);
-        }
-
-        // Show the table
-        this.domNode.appendChild(tableNode);
-
-    },
-
-    /**
-     * Create a header cell node.
-     *
-     * @param headerValue   The value to show in the header
-     * @@returns The node
-     */
-    createHeaderNode : function (headerValue) {
-        'use strict';
-
-        var
-            divNode,
-            headerNode,
-            spanNode;
-
-        // Create the span containing the header value
-        spanNode = mxui.dom.span(headerValue);
-
-        // Create the div
-        divNode = document.createElement("div");
-        divNode.appendChild(spanNode);
-
-        // Create the th
-        headerNode = document.createElement("th");
-        headerNode.appendChild(divNode);
-        dojo.addClass(headerNode, this.xLabelClass);
-
-        return headerNode;
-
-    },
-
-    /**
-     * Called when the user clicks on a cell
-     *
-     * @param evt  The click event
-     */
-    onClickCell : function (evt) {
-        'use strict';
-        // console.log("onClickCell");
-        // console.dir(evt);
-        this.onClickXIdValue = evt.target.getAttribute(this.xIdAttr);
-        this.onClickYIdValue = evt.target.getAttribute(this.yIdAttr);
-        mx.data.create({
-            entity   : this.onCellClickEntity,
-            callback : dojo.hitch(this, this.onClickCellObjectCreated),
-            error    : dojo.hitch(this, this.onClickCellObjectCreateError)
-        });
-    },
-
-    /**
-     * Called upon creation of onCellClickEntity
-     *
-     * @param mendixObject  The new Mendix object
-     */
-    onClickCellObjectCreated : function (mendixObject) {
-        'use strict';
-
-        // console.log("onClickCellObjectCreated");
-
-        mendixObject.set(this.onCellClickXIdAttr, this.onClickXIdValue);
-        mendixObject.set(this.onCellClickYIdAttr, this.onClickYIdValue);
-        if (this.onCellClickReferenceName) {
-            mendixObject.addReference(this.onCellClickReferenceName, this.contextGUID);
-        }
-        // console.log("Commit object");
-        this.onClickMendixObject = mendixObject;
-        mx.data.commit({
-            mxobj    : mendixObject,
-            callback : dojo.hitch(this, this.onClickMendixObjectCommitted),
-            error    : dojo.hitch(this, this.onClickMendixObjectCommitError)
-        });
-    },
-
-    /**
-     * Called after creation of onCellClickEntity failed
-     *
-     */
-    onClickMendixObjectCommitted : function () {
-        'use strict';
-
-        // console.log("onClickMendixObjectCommitted");
-        mx.data.action({
-            params       : {
-                applyto     : "selection",
-                actionname  : this.onCellClickMicroflow,
-                guids : [this.onClickMendixObject.getGuid()]
+                return axisDataArray;
             },
-            error        : dojo.hitch(this, this.onClickCellMicroflowError),
-            onValidation : dojo.hitch(this, this.onClickCellMicroflowError)
-        });
 
-    },
+            /**
+             * Create the table
+             */
+            createTable: function () {
 
-    /**
-     * Called after creation of onCellClickEntity failed
-     *
-     * @param err       The error object, if any
-     */
-    onClickCellObjectCreateError : function (err) {
-        'use strict';
+                // console.log(this.domNode.id + ": createTable");
 
-        console.dir(err);
-        alert("Create object of entity " + this.onCellClickEntity + " ended with an error");
+                var
+                    cellMapKey,
+                    cellMapObject,
+                    cellValue,
+                    colIndex,
+                    exportButton,
+                    footerRowNode,
+                    headerRowNode,
+                    node,
+                    rowNode,
+                    rowIndex,
+                    tableNode,
+                    topLeftCellNode,
+                    tresholdClass,
+                    tresholdCompareValue,
+                    tresholdIndex,
+                    xTotalsMap = {},
+                    xIdValue,
+                    xTotal,
+                    yIdValue,
+                    yLabelValue,
+                    yTotal;
 
-    },
+                // Create table
+                tableNode = document.createElement("table");
 
-    /**
-     * Called after commit of onCellClickEntity failed
-     *
-     * @param err       The error object, if any
-     */
-    onClickMendixObjectCommitError : function (err) {
-        'use strict';
-
-        console.dir(err);
-        alert("Commit object of entity " + this.onCellClickEntity + " ended with an error");
-
-    },
-
-    /**
-     * Call to onClickCell microflow failed
-     *
-     * @param err       The error object, if any
-     */
-    onClickCellMicroflowError : function (err) {
-        'use strict';
-
-        console.dir(err);
-        alert("Call to microflow " + this.onCellClickMicroflow + " ended with an error");
-
-    },
-
-
-    /**
-     * Called when the user requests an export of the data
-     *
-     * @param evt  The click event
-     */
-    exportData : function (evt) {
-        'use strict';
-        // console.log("exportData");
-        // console.dir(evt);
-        mx.data.create({
-            entity   : this.exportToCsvEntity,
-            callback : dojo.hitch(this, this.exportDataObjectCreated),
-            error    : dojo.hitch(this, this.exportDataObjectCreateError)
-        });
-    },
-
-    /**
-     * Called upon creation of exportToCsvEntity
-     *
-     * @param mendixObject  The new Mendix object
-     */
-    exportDataObjectCreated : function (mendixObject) {
-        'use strict';
-
-        // console.log("exportDataObjectCreated");
-        var
-            exportData = '',
-            useQuotes = true;
-
-        if (this.cellValueAction === "count") {
-            useQuotes = false;
-        } else {
-            if (this.cellValueAttrType !== "DateTime") {
-                useQuotes = false;
-            }
-        }
-
-        dojo.forEach(this.domNode.firstChild.childNodes, function (row, rowIndex) {
-            dojo.forEach(row.childNodes, function (cell, colIndex) {
-                if (rowIndex === 0) {
-                    if (colIndex === 0) {
-                        exportData += '""';
-                    } else {
-                        exportData += ',"' + cell.textContent + '"';
+                // Header row
+                headerRowNode = document.createElement("tr");
+                topLeftCellNode = document.createElement("th");
+                if (this.allowExport) {
+                    exportButton = document.createElement('button');
+                    exportButton.setAttribute('type', 'button');
+                    domClass.add(exportButton, 'btn mx-button btn-default ' + this.exportButtonClass);
+                    if (this.exportButtonCaption) {
+                        exportButton.innerHTML = this.exportButtonCaption;
                     }
-                } else {
-                    if (colIndex === 0) {
-                        exportData += '"' + cell.textContent + '"';
+                    exportButton.onclick = lang.hitch(this, this.exportData);
+                    topLeftCellNode.appendChild(exportButton);
+                }
+                headerRowNode.appendChild(topLeftCellNode);
+                for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
+                    headerRowNode.appendChild(this.createHeaderNode(this.xKeyArray[colIndex].labelValue));
+                }
+                if (this.showTotalColumn) {
+                    headerRowNode.appendChild(this.createHeaderNode(this.totalColumnLabel));
+                }
+                tableNode.appendChild(headerRowNode);
+
+                // Rows
+                for (rowIndex = 0; rowIndex < this.yKeyArray.length; rowIndex = rowIndex + 1) {
+                    rowNode = document.createElement("tr");
+                    if (rowIndex % 2 === 0) {
+                        domClass.add(rowNode, this.evenRowClass);
                     } else {
-                        if (useQuotes) {
-                            exportData += ',"';
+                        domClass.add(rowNode, this.oddRowClass);
+                    }
+
+                    // Get the label and the ID
+                    yLabelValue = this.yKeyArray[rowIndex].labelValue;
+                    yIdValue = this.yKeyArray[rowIndex].idValue;
+
+                    // The row label
+                    node = mxui.dom.th(yLabelValue);
+                    domClass.add(node, this.yLabelClass);
+                    rowNode.appendChild(node);
+
+                    // Columns
+                    yTotal = 0;
+                    for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
+                        // Get the ID
+                        xIdValue            = this.xKeyArray[colIndex].idValue;
+                        cellMapKey          = xIdValue + "_" + yIdValue;
+                        // It is possible that no values exists for a given combination of the two IDs
+                        tresholdClass = null;
+                        if (this.cellMap[cellMapKey]) {
+                            cellMapObject   = this.cellMap[cellMapKey];
+                            cellValue       = cellMapObject.cellValue;
+                            // Process the styling tresholds, if requested
+                            if (this.tresholdList && this.tresholdList.length) {
+                                for (tresholdIndex = 0; tresholdIndex < this.tresholdList.length; tresholdIndex = tresholdIndex + 1) {
+                                    switch (this.cellValueAttrType) {
+                                    case "DateTime":
+                                        tresholdCompareValue = this.parseDate(cellValue, this.cellValueDateformat);
+                                        break;
+
+                                    default:
+                                        tresholdCompareValue = cellValue;
+                                    }
+                                    if (tresholdCompareValue >= this.tresholdList[tresholdIndex].minValue) {
+                                        tresholdClass = this.tresholdList[tresholdIndex].additionalClass;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            // Process the totals, if requested
+                            if (this.showTotalColumn) {
+                                yTotal       = yTotal + cellValue;
+                            }
+                            if (this.showTotalRow) {
+                                if (xTotalsMap[xIdValue]) {
+                                    xTotal = xTotalsMap[xIdValue] + cellValue;
+                                } else {
+                                    xTotal = cellValue;
+                                }
+                                xTotalsMap[xIdValue] = xTotal;
+                            }
                         } else {
-                            exportData += ',';
+                            cellValue       = "&nbsp;";
                         }
-                        exportData += cell.textContent;
-                        if (useQuotes) {
-                            exportData += '"';
+                        node                = document.createElement("td");
+                        switch (this.cellValueAttrType) {
+                        case "Currency":
+                            node.innerHTML = this.formatCurrency(cellValue);
+                            break;
+
+                        case "Integer":
+                        case "Long":
+                            node.innerHTML = dojoNumber.format(cellValue, { places: this.precisionForAverage });
+                            break;
+
+                        default:
+                            node.innerHTML      = cellValue;
                         }
+                        domClass.add(node, this.cellClass);
+                        if (this.onCellClickMicroflow !== "") {
+                            node.setAttribute(this.xIdAttr, xIdValue);
+                            node.setAttribute(this.yIdAttr, yIdValue);
+                            domClass.add(node, this.onCellClickClass);
+                            node.onclick = lang.hitch(this, this.onClickCell);
+                        }
+                        // Additional class based on the treshold?
+                        if (tresholdClass) {
+                            domClass.add(node, tresholdClass);
+                        }
+                        rowNode.appendChild(node);
+                    }
+                    if (this.showTotalColumn) {
+                        node                = document.createElement("td");
+                        switch (this.cellValueAttrType) {
+                        case "Currency":
+                            node.innerHTML = this.formatCurrency(yTotal);
+                            break;
+
+                        default:
+                            node.innerHTML      = yTotal;
+                        }
+                        domClass.add(node, this.totalColumnCellClass);
+                        rowNode.appendChild(node);
+                    }
+
+                    tableNode.appendChild(rowNode);
+                }
+
+                if (this.showTotalRow) {
+                    // Footer row containing the totals for each column
+                    footerRowNode = document.createElement("tr");
+                    domClass.add(footerRowNode, this.totalRowClass);
+                    node = mxui.dom.td(this.totalRowLabel);
+                    domClass.add(node, this.yLabelClass);
+                    footerRowNode.appendChild(node);
+                    yTotal = 0;
+                    for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
+                        // Get the ID
+                        xIdValue            = this.xKeyArray[colIndex].idValue;
+                        cellValue           = xTotalsMap[xIdValue];
+                        yTotal              = yTotal + cellValue;
+                        node                = document.createElement("td");
+                        switch (this.cellValueAttrType) {
+                        case "Currency":
+                            node.innerHTML = this.formatCurrency(cellValue);
+                            break;
+
+                        default:
+                            node.innerHTML      = cellValue;
+                        }
+                        domClass.add(node, this.totalRowCellClass);
+                        footerRowNode.appendChild(node);
+                    }
+                    node                = document.createElement("td");
+                    switch (this.cellValueAttrType) {
+                    case "Currency":
+                        node.innerHTML = this.formatCurrency(yTotal);
+                        break;
+
+                    default:
+                        node.innerHTML      = yTotal;
+                    }
+                    domClass.add(node, this.totalRowCellClass);
+                    footerRowNode.appendChild(node);
+
+                    tableNode.appendChild(footerRowNode);
+                }
+
+                // Show the table
+                this.domNode.appendChild(tableNode);
+
+            },
+
+            /**
+             * Create a header cell node.
+             *
+             * @param headerValue   The value to show in the header
+             * @@returns The node
+             */
+            createHeaderNode : function (headerValue) {
+
+                var
+                    divNode,
+                    headerNode,
+                    spanNode;
+
+                // Create the span containing the header value
+                spanNode = mxui.dom.span(headerValue);
+
+                // Create the div
+                divNode = document.createElement("div");
+                divNode.appendChild(spanNode);
+
+                // Create the th
+                headerNode = document.createElement("th");
+                headerNode.appendChild(divNode);
+                domClass.add(headerNode, this.xLabelClass);
+
+                return headerNode;
+
+            },
+
+            /**
+             * Called when the user clicks on a cell
+             *
+             * @param evt  The click event
+             */
+            onClickCell : function (evt) {
+                // console.log("onClickCell");
+                // console.dir(evt);
+                this.onClickXIdValue = evt.target.getAttribute(this.xIdAttr);
+                this.onClickYIdValue = evt.target.getAttribute(this.yIdAttr);
+                mx.data.create({
+                    entity   : this.onCellClickEntity,
+                    callback : lang.hitch(this, this.onClickCellObjectCreated),
+                    error    : lang.hitch(this, this.onClickCellObjectCreateError)
+                });
+            },
+
+            /**
+             * Called upon creation of onCellClickEntity
+             *
+             * @param mendixObject  The new Mendix object
+             */
+            onClickCellObjectCreated : function (mendixObject) {
+
+                // console.log("onClickCellObjectCreated");
+
+                mendixObject.set(this.onCellClickXIdAttr, this.onClickXIdValue);
+                mendixObject.set(this.onCellClickYIdAttr, this.onClickYIdValue);
+                if (this.onCellClickReferenceName) {
+                    mendixObject.addReference(this.onCellClickReferenceName, this.contextGUID);
+                }
+                // console.log("Commit object");
+                this.onClickMendixObject = mendixObject;
+                mx.data.commit({
+                    mxobj    : mendixObject,
+                    callback : lang.hitch(this, this.onClickMendixObjectCommitted),
+                    error    : lang.hitch(this, this.onClickMendixObjectCommitError)
+                });
+            },
+
+            /**
+             * Called after creation of onCellClickEntity failed
+             *
+             */
+            onClickMendixObjectCommitted : function () {
+
+                // console.log("onClickMendixObjectCommitted");
+                mx.data.action({
+                    params       : {
+                        applyto     : "selection",
+                        actionname  : this.onCellClickMicroflow,
+                        guids : [this.onClickMendixObject.getGuid()]
+                    },
+                    error        : lang.hitch(this, this.onClickCellMicroflowError),
+                    onValidation : lang.hitch(this, this.onClickCellMicroflowError)
+                });
+
+            },
+
+            /**
+             * Called after creation of onCellClickEntity failed
+             *
+             * @param err       The error object, if any
+             */
+            onClickCellObjectCreateError : function (err) {
+
+                console.dir(err);
+                alert("Create object of entity " + this.onCellClickEntity + " ended with an error");
+
+            },
+
+            /**
+             * Called after commit of onCellClickEntity failed
+             *
+             * @param err       The error object, if any
+             */
+            onClickMendixObjectCommitError : function (err) {
+
+                console.dir(err);
+                alert("Commit object of entity " + this.onCellClickEntity + " ended with an error");
+
+            },
+
+            /**
+             * Call to onClickCell microflow failed
+             *
+             * @param err       The error object, if any
+             */
+            onClickCellMicroflowError : function (err) {
+
+                console.dir(err);
+                alert("Call to microflow " + this.onCellClickMicroflow + " ended with an error");
+
+            },
+
+
+            /**
+             * Called when the user requests an export of the data
+             *
+             * @param evt  The click event
+             */
+            exportData : function (evt) {
+                // console.log("exportData");
+                // console.dir(evt);
+                mx.data.create({
+                    entity   : this.exportToCsvEntity,
+                    callback : lang.hitch(this, this.exportDataObjectCreated),
+                    error    : lang.hitch(this, this.exportDataObjectCreateError)
+                });
+            },
+
+            /**
+             * Called upon creation of exportToCsvEntity
+             *
+             * @param mendixObject  The new Mendix object
+             */
+            exportDataObjectCreated : function (mendixObject) {
+
+                // console.log("exportDataObjectCreated");
+                var
+                    exportData = '',
+                    useQuotes = true;
+
+                if (this.cellValueAction === "count") {
+                    useQuotes = false;
+                } else {
+                    if (this.cellValueAttrType !== "DateTime") {
+                        useQuotes = false;
                     }
                 }
-            });
-            exportData += '\r\n';
-        });
 
-        mendixObject.set(this.exportToCsvAttr, exportData);
-        // console.log("Commit object");
-        this.exportMendixObject = mendixObject;
-        mx.data.commit({
-            mxobj    : mendixObject,
-            callback : dojo.hitch(this, this.exportMendixObjectCommitted),
-            error    : dojo.hitch(this, this.exportMendixObjectCommitError)
-        });
-    },
+                dojoArray.forEach(this.domNode.firstChild.childNodes, function (row, rowIndex) {
+                    dojoArray.forEach(row.childNodes, function (cell, colIndex) {
+                        if (rowIndex === 0) {
+                            if (colIndex === 0) {
+                                exportData += '""';
+                            } else {
+                                exportData += ',"' + cell.textContent + '"';
+                            }
+                        } else {
+                            if (colIndex === 0) {
+                                exportData += '"' + cell.textContent + '"';
+                            } else {
+                                if (useQuotes) {
+                                    exportData += ',"';
+                                } else {
+                                    exportData += ',';
+                                }
+                                exportData += cell.textContent;
+                                if (useQuotes) {
+                                    exportData += '"';
+                                }
+                            }
+                        }
+                    });
+                    exportData += '\r\n';
+                });
 
-    /**
-     * Called after creation of exportToCsvEntity failed
-     *
-     */
-    exportMendixObjectCommitted : function () {
-        'use strict';
-
-        // console.log("exportMendixObjectCommitted");
-        mx.data.action({
-            params       : {
-                applyto     : "selection",
-                actionname  : this.exportToCsvMicroflow,
-                guids : [this.exportMendixObject.getGuid()]
+                mendixObject.set(this.exportToCsvAttr, exportData);
+                // console.log("Commit object");
+                this.exportMendixObject = mendixObject;
+                mx.data.commit({
+                    mxobj    : mendixObject,
+                    callback : lang.hitch(this, this.exportMendixObjectCommitted),
+                    error    : lang.hitch(this, this.exportMendixObjectCommitError)
+                });
             },
-            error        : dojo.hitch(this, this.exportDataMicroflowError),
-            onValidation : dojo.hitch(this, this.exportDataMicroflowError)
+
+            /**
+             * Called after creation of exportToCsvEntity failed
+             *
+             */
+            exportMendixObjectCommitted : function () {
+
+                // console.log("exportMendixObjectCommitted");
+                mx.data.action({
+                    params       : {
+                        applyto     : "selection",
+                        actionname  : this.exportToCsvMicroflow,
+                        guids : [this.exportMendixObject.getGuid()]
+                    },
+                    error        : lang.hitch(this, this.exportDataMicroflowError),
+                    onValidation : lang.hitch(this, this.exportDataMicroflowError)
+                });
+
+            },
+
+            /**
+             * Called after creation of exportToCsvEntity failed
+             *
+             * @param err       The error object, if any
+             */
+            exportDataObjectCreateError : function (err) {
+
+                console.dir(err);
+                alert("Create object of entity " + this.exportToCsvEntity + " ended with an error");
+
+            },
+
+            /**
+             * Called after commit of exportToCsvEntity failed
+             *
+             * @param err       The error object, if any
+             */
+            exportMendixObjectCommitError : function (err) {
+
+                console.dir(err);
+                alert("Commit object of entity " + this.exportToCsvEntity + " ended with an error");
+
+            },
+
+            /**
+             * Call to exportData microflow failed
+             *
+             * @param err       The error object, if any
+             */
+            exportDataMicroflowError : function (err) {
+
+                console.dir(err);
+                alert("Call to microflow " + this.exportDataMicroflow + " ended with an error");
+
+            },    /**
+             * Get the attribute value for use as sort key
+             *
+             * @param mendixObject  The Mendix object to take the value from
+             * @param attrName      The attribute name
+             * @returns {string}    The sort key
+             */
+            getSortKey : function (mendixObject, attrName) {
+
+                var
+                    attrType,
+                    attrValue,
+                    result;
+
+                attrType = this.entityMetaData.getAttributeType(attrName);
+                attrValue = mendixObject.get(attrName);
+
+                switch (attrType) {
+                case "AutoNumber":
+                case "Integer":
+                case "Long":
+                case "Currency":
+                case "Float":
+                case "DateTime":
+                    result = Number(attrValue);
+                    break;
+
+                default:
+                    result = attrValue;
+                }
+
+                return result;
+            },
+
+            /**
+             * Get the attribute value for use as display value
+             *
+             * @param mendixObject  The Mendix object to take the value from
+             * @param attrName      The attribute name
+             * @param dateFormat    The date format to use for DateTime attributes
+             * @returns {string}    The sort key
+             */
+            getDisplayValue : function (mendixObject, attrName, dateFormat) {
+
+                var
+                    attrType,
+                    attrValue,
+                    result;
+
+                attrType = this.entityMetaData.getAttributeType(attrName);
+                attrValue = mendixObject.get(attrName);
+
+                switch (attrType) {
+                case "Currency":
+                    result = this.formatCurrency(attrValue);
+                    break;
+                case "DateTime":
+                    result = this.formatDateFromNumber(attrValue, dateFormat);
+                    break;
+
+                case "Enum":
+                    result = this.entityMetaData.getEnumCaption(attrName, attrValue);
+                    break;
+
+                default:
+                    result = attrValue;
+                }
+
+                return result;
+            },
+
+            /**
+             * Show progress indicator, depends on Mendix version
+             */
+            showProgress: function () {
+                this.progressDialogId = mx.ui.showProgress();
+            },
+
+            /**
+             * Hide progress indicator, depends on Mendix version
+             */
+            hideProgress: function () {
+                mx.ui.hideProgress(this.progressDialogId);
+                this.progressDialogId = null;
+            },
+
+            /**
+             * Parse a string into a date
+             *
+             * @param dateString    The date value
+             * @param dateFormat    The date format string
+             * @returns {Date}      The date
+             */
+            parseDate: function (dateString, dateFormat) {
+
+                var
+                    result;
+
+                if (mx.parser.parseValue) {
+                    result = mx.parser.parseValue(dateString, "datetime", { datePattern: dateFormat});
+                } else {
+                    result = dojoDateLocale.parse(dateString, { selector : "date", datePattern: dateFormat});
+                }
+
+                return result;
+            },
+
+            /**
+             * Format a currency value
+             *
+             * @param value         The value to format
+             * @returns {String}    The formatted value
+             */
+            formatCurrency: function (value) {
+
+                var
+                    result;
+
+                if (mx.parser.formatValue) {
+                    result = mx.parser.formatValue(value, "currency");
+                } else {
+                    result = dojoNumber.format(value, { places: 2 });
+                }
+
+                return result;
+            },
+
+            /**
+             * Format a date using a number
+             *
+             * @param value         The date in milliseconds since the epoch.
+             * @param dateFormat    The date format to use
+             * @returns {String}    The formatted value
+             */
+            formatDateFromNumber: function (value, dateFormat) {
+
+                var
+                    result;
+
+                if (mx.parser.formatValue) {
+                    result = mx.parser.formatValue(new Date(value), "datetime", { datePattern: dateFormat});
+                } else {
+                    result = dojoDateLocale.format(new Date(value), { selector : "date", datePattern: dateFormat});
+                }
+
+                return result;
+            },
+
+            /**
+             * Cleanup upon destruction of the widget instance.
+             *
+             */
+            uninitialize: function () {
+                // console.log(this.domNode.id + ": uninitialize");
+                if (this.handle) {
+                    mx.data.unsubscribe(this.handle);
+                }
+                if (this.progressDialogId) {
+                    this.hideProgress();
+                }
+            }
         });
+    });
 
-    },
-
-    /**
-     * Called after creation of exportToCsvEntity failed
-     *
-     * @param err       The error object, if any
-     */
-    exportDataObjectCreateError : function (err) {
-        'use strict';
-
-        console.dir(err);
-        alert("Create object of entity " + this.exportToCsvEntity + " ended with an error");
-
-    },
-
-    /**
-     * Called after commit of exportToCsvEntity failed
-     *
-     * @param err       The error object, if any
-     */
-    exportMendixObjectCommitError : function (err) {
-        'use strict';
-
-        console.dir(err);
-        alert("Commit object of entity " + this.exportToCsvEntity + " ended with an error");
-
-    },
-
-    /**
-     * Call to exportData microflow failed
-     *
-     * @param err       The error object, if any
-     */
-    exportDataMicroflowError : function (err) {
-        'use strict';
-
-        console.dir(err);
-        alert("Call to microflow " + this.exportDataMicroflow + " ended with an error");
-
-    },    /**
-     * Get the attribute value for use as sort key
-     *
-     * @param mendixObject  The Mendix object to take the value from
-     * @param attrName      The attribute name
-     * @returns {string}    The sort key
-     */
-    getSortKey : function (mendixObject, attrName) {
-        'use strict';
-
-        var
-            attrType,
-            attrValue,
-            result;
-
-        attrType = this.entityMetaData.getAttributeType(attrName);
-        attrValue = mendixObject.get(attrName);
-
-        switch (attrType) {
-        case "AutoNumber":
-        case "Integer":
-        case "Long":
-        case "Currency":
-        case "Float":
-        case "DateTime":
-            result = Number(attrValue);
-            break;
-
-        default:
-            result = attrValue;
-        }
-
-        return result;
-    },
-
-    /**
-     * Get the attribute value for use as display value
-     *
-     * @param mendixObject  The Mendix object to take the value from
-     * @param attrName      The attribute name
-     * @param dateFormat    The date format to use for DateTime attributes
-     * @returns {string}    The sort key
-     */
-    getDisplayValue : function (mendixObject, attrName, dateFormat) {
-        'use strict';
-
-        var
-            attrType,
-            attrValue,
-            result;
-
-        attrType = this.entityMetaData.getAttributeType(attrName);
-        attrValue = mendixObject.get(attrName);
-
-        switch (attrType) {
-        case "Currency":
-            result = this.formatCurrency(attrValue);
-            break;
-        case "DateTime":
-            result = this.formatDateFromNumber(attrValue, dateFormat);
-            break;
-
-        case "Enum":
-            result = this.entityMetaData.getEnumCaption(attrName, attrValue);
-            break;
-
-        default:
-            result = attrValue;
-        }
-
-        return result;
-    },
-
-    /**
-     * Show progress indicator, depends on Mendix version
-     */
-    showProgress: function () {
-        'use strict';
-        this.progressDialogId = mx.ui.showProgress();
-    },
-
-    /**
-     * Hide progress indicator, depends on Mendix version
-     */
-    hideProgress: function () {
-        'use strict';
-        mx.ui.hideProgress(this.progressDialogId);
-        this.progressDialogId = null;
-    },
-
-    /**
-     * Parse a string into a date
-     *
-     * @param dateString    The date value
-     * @param dateFormat    The date format string
-     * @returns {Date}      The date
-     */
-    parseDate: function (dateString, dateFormat) {
-        'use strict';
-
-        var
-            result;
-
-        if (mx.parser.parseValue) {
-            result = mx.parser.parseValue(dateString, "datetime", { datePattern: dateFormat});
-        } else {
-            result = dojo.date.locale.parse(dateString, { selector : "date", datePattern: dateFormat});
-        }
-
-        return result;
-    },
-
-    /**
-     * Format a currency value
-     *
-     * @param value         The value to format
-     * @returns {String}    The formatted value
-     */
-    formatCurrency: function (value) {
-        'use strict';
-
-        var
-            result;
-
-        if (mx.parser.formatValue) {
-            result = mx.parser.formatValue(value, "currency");
-        } else {
-            result = dojo.number.format(value, { places: 2 });
-        }
-
-        return result;
-    },
-
-    /**
-     * Format a date using a number
-     *
-     * @param value         The date in milliseconds since the epoch.
-     * @param dateFormat    The date format to use
-     * @returns {String}    The formatted value
-     */
-    formatDateFromNumber: function (value, dateFormat) {
-        'use strict';
-
-        var
-            result;
-
-        if (mx.parser.formatValue) {
-            result = mx.parser.formatValue(new Date(value), "datetime", { datePattern: dateFormat});
-        } else {
-            result = dojo.date.locale.format(new Date(value), { selector : "date", datePattern: dateFormat});
-        }
-
-        return result;
-    },
-
-    /**
-     * Cleanup upon destruction of the widget instance.
-     *
-     */
-    uninitialize: function () {
-        'use strict';
-        // console.log(this.domNode.id + ": uninitialize");
-        if (this.handle) {
-            mx.data.unsubscribe(this.handle);
-        }
-        if (this.progressDialogId) {
-            this.hideProgress();
-        }
-    }
-});
+}());
