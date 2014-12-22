@@ -1,4 +1,4 @@
-/*global mx, mxui, mendix, require, console, define, module, logger */
+/*global mx, mendix, require, console, define, module, logger */
 /**
 
 	PivotDataWidget
@@ -179,7 +179,7 @@
                         this.buildTableData();
                         this.createTable();
                     } else {
-                        noDataNode = mxui.dom.p(this.noDataText);
+                        noDataNode = domMx.p(this.noDataText);
                         domClass.add(noDataNode, this.noDataTextClass);
                         this.domNode.appendChild(noDataNode);
                     }
@@ -337,11 +337,11 @@
                     i,
                     listNode;
 
-                this.domNode.appendChild(mxui.dom.p("Configuration error(s) found"));
+                this.domNode.appendChild(domMx.p("Configuration error(s) found"));
                 domClass.add(this.domNode, "PivotDataWidgetConfigurationError");
                 listNode = document.createElement("ul");
                 for (i = 0; i < errorMessageArray.length; i = i + 1) {
-                    listNode.appendChild(mxui.dom.li(errorMessageArray[i]));
+                    listNode.appendChild(domMx.li(errorMessageArray[i]));
                 }
                 this.domNode.appendChild(listNode);
             },
@@ -692,7 +692,7 @@
                     yIdValue = this.yKeyArray[rowIndex].idValue;
 
                     // The row label
-                    node = mxui.dom.th(yLabelValue);
+                    node = domMx.th(yLabelValue);
                     domClass.add(node, this.yLabelClass);
                     rowNode.appendChild(node);
 
@@ -788,7 +788,7 @@
                     // Footer row containing the totals for each column
                     footerRowNode = document.createElement("tr");
                     domClass.add(footerRowNode, this.totalRowClass);
-                    node = mxui.dom.td(this.totalRowLabel);
+                    node = domMx.td(this.totalRowLabel);
                     domClass.add(node, this.yLabelClass);
                     footerRowNode.appendChild(node);
                     yTotal = 0;
@@ -843,7 +843,7 @@
                     spanNode;
 
                 // Create the span containing the header value
-                spanNode = mxui.dom.span(headerValue);
+                spanNode = domMx.span(headerValue);
 
                 // Create the div
                 divNode = document.createElement("div");
