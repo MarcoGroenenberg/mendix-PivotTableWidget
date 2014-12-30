@@ -14,7 +14,7 @@ The pivot table widget can count the items in each cell or determine the sum, av
 
 For count and sum, optionally a total column and row can be displayed.
 
-There is also a display action for string values. This allows to show correlation between two entities. Note that this is most effective when each combination of the two entities exists only once.
+There is also a display action for string and enum values. This allows to show correlation between two entities. Note that this is most effective when each combination of the two entities exists only once.
 
 The various elements in the table can easily be styled.
 
