@@ -58,7 +58,9 @@
                 "max_DateTime",
                 "max_Float",
                 "max_Integer",
-                "max_Long"
+                "max_Long",
+                "display_String",
+                "display_Enum"
             ],
             onClickXIdValue                 : null,
             onClickYIdValue                 : null,
@@ -229,6 +231,16 @@
                 if (this.cellValueAction === "average") {
                     if (this.precisionForAverage < 0 || this.precisionForAverage > 10) {
                         errorMessageArray.push("Decimal precision for average must be between 0 and 10");
+                    }
+                }
+
+                if (this.cellValueAction === "display") {
+                    if (this.tresholdList && this.tresholdList.length && this.tresholdList.length > 0) {
+                        errorMessageArray.push("Styling tresholds are not allowed for action Display");
+                    }
+                } else {
+                    if (this.useDisplayValueForCss) {
+                        errorMessageArray.push("Use value as css class is only allowed for action Display");
                     }
                 }
 
@@ -467,6 +479,16 @@
             },
 
             /**
+             * Display action
+             *
+             * @param valueArray    The value array from the cell map
+             * @returns cell value
+             */
+            getCellDisplayValue: function (valueArray) {
+                return valueArray.join();
+            },
+
+            /**
              * Build table data
              */
             buildTableData: function () {
@@ -493,7 +515,12 @@
 
                 for (mendixObjectIndex = 0; mendixObjectIndex < this.mendixObjectArray.length; mendixObjectIndex = mendixObjectIndex + 1) {
                     mendixObject    = this.mendixObjectArray[mendixObjectIndex];
-                    cellValue       = this.getSortKey(mendixObject, this.cellValueAttr);
+                    // For display, convert to display value as no aggregation will take place.
+                    if (this.cellValueAction === "display") {
+                        cellValue   = this.getDisplayValue(mendixObject, this.cellValueAttr, this.cellValueDateformat);
+                    } else {
+                        cellValue   = this.getSortKey(mendixObject, this.cellValueAttr);
+                    }
                     xIdValue        = this.getSortKey(mendixObject, this.xIdAttr);
                     yIdValue        = this.getSortKey(mendixObject, this.yIdAttr);
                     xLabelValue     = this.getDisplayValue(mendixObject, this.xLabelAttr, this.xLabelDateformat);
@@ -518,6 +545,11 @@
                             yIdValue        : yIdValue,
                             cellValueArray  : [cellValue]
                         };
+                        // Save sort key value in the map object too, used as additional styling CSS class
+                        // Only for the first object; CSS class is not applied when multiple objects exist for one cell.
+                        if (this.useDisplayValueForCss) {
+                            cellMapObject.displayCssValue = this.getSortKey(mendixObject, this.cellValueAttr);
+                        }
                         this.cellMap[cellMapKey] = cellMapObject;
                     }
                     if (!xSortValueMap[xSortValue]) {
@@ -548,6 +580,10 @@
 
                         case "max":
                             cellMapObject.cellValue = this.getCellMax(cellMapObject.cellValueArray);
+                            break;
+
+                        case "display":
+                            cellMapObject.cellValue = this.getCellDisplayValue(cellMapObject.cellValueArray);
                             break;
 
                         default:
@@ -635,6 +671,7 @@
                     cellMapObject,
                     cellValue,
                     colIndex,
+                    displayValueCellClass,
                     exportButton,
                     footerRowNode,
                     headerRowNode,
@@ -704,6 +741,7 @@
                         cellMapKey          = xIdValue + "_" + yIdValue;
                         // It is possible that no values exists for a given combination of the two IDs
                         tresholdClass = null;
+                        displayValueCellClass = null;
                         if (this.cellMap[cellMapKey]) {
                             cellMapObject   = this.cellMap[cellMapKey];
                             cellValue       = cellMapObject.cellValue;
@@ -723,6 +761,15 @@
                                     } else {
                                         break;
                                     }
+                                }
+                            }
+                            // Action display, use value as CSS class?
+                            if (this.useDisplayValueForCss) {
+                                if (cellMapObject.cellValueArray.length === 1 && cellMapObject.displayCssValue) {
+                                    // Suppress jslint warning about unsecure regex. I'm replacing anything that is not a true alphanumeric character. That would include any weird unicode stuff.
+                                    /*jslint regexp: true */
+                                    displayValueCellClass = this.displayValueClass + cellMapObject.displayCssValue.replace(/[^A-Za-z0-9]/g, '_');
+                                    /*jslint regexp: false */
                                 }
                             }
                             // Process the totals, if requested
@@ -764,6 +811,10 @@
                         // Additional class based on the treshold?
                         if (tresholdClass) {
                             domClass.add(node, tresholdClass);
+                        }
+                        // Additional class for display?
+                        if (displayValueCellClass) {
+                            domClass.add(node, displayValueCellClass);
                         }
                         rowNode.appendChild(node);
                     }

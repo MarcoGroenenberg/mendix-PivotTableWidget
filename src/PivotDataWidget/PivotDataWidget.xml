@@ -32,6 +32,8 @@
                 <attributeType name="DateTime"/>
                 <attributeType name="Integer"/>
                 <attributeType name="Long"/>
+                <attributeType name="Enum"/>
+                <attributeType name="String"/>
             </attributeTypes>
         </property>
         <property key="cellValueAction" type="enumeration" defaultValue="count">
@@ -44,6 +46,7 @@
                 <enumerationValue key="average">Average</enumerationValue>
                 <enumerationValue key="min">Min</enumerationValue>
                 <enumerationValue key="max">Max</enumerationValue>
+                <enumerationValue key="display">Display</enumerationValue>
             </enumerationValues>
         </property>
         <property key="precisionForAverage" type="integer" defaultValue="0">
@@ -101,6 +104,11 @@
                 <translation lang="en_US">No data to display</translation>
                 <translation lang="nl_NL">Geen gegevens beschikbaar</translation>
             </translations>
+        </property>
+        <property key="useDisplayValueForCss" type="boolean" defaultValue="false">
+            <caption>Use value as css class</caption>
+            <category>Configuration</category>
+            <description>For action display, whether to use the display value as additional CSS class.</description>
         </property>
 
         <!-- X-axis properties -->
@@ -278,6 +286,11 @@
             <caption>Cell class</caption>
             <category>Styling</category>
             <description>Cell CSS class.</description>
+        </property>
+        <property key="displayValueClass" type="string" defaultValue="PivotDataWidgetDisplay-">
+            <caption>Display value class</caption>
+            <category>Styling</category>
+            <description>Display value CSS class prefix. The actual value is appended. Only when one value exists for the cell.</description>
         </property>
         <property key="totalColumnCellClass" type="string" defaultValue="PivotDataWidgetTotalColumnCellCenter">
             <caption>Total column cell class</caption>

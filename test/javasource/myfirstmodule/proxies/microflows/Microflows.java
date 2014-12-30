@@ -56,6 +56,20 @@ public class Microflows
 		}
 	}
 
+	public static void closeRelationPivotTable(IContext context, myfirstmodule.proxies.TransientRelationPivotTableParameters _parameters)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("parameters", _parameters == null ? null : _parameters.getMendixObject());
+			Core.execute(context, "MyFirstModule.CloseRelationPivotTable", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
 	public static void closeSalesOrderPivotTable(IContext context, myfirstmodule.proxies.TransientSalesOrderPivotTableParameters _transientSalesOrderPivotTableParameters)
 	{
 		try
@@ -230,6 +244,64 @@ public class Microflows
 			Map<String, Object> params = new HashMap<String, Object>();
 			IMendixObject result = (IMendixObject)Core.execute(context, "MyFirstModule.TransientIncidentPivotTableParameters_CreateObject", params);
 			return result == null ? null : myfirstmodule.proxies.TransientIncidentPivotTableParameters.initialize(context, result);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
+	public static java.util.List<myfirstmodule.proxies.TransientRelationPivotTable> transientRelationPivotTable_CreateEmptyList(IContext context, myfirstmodule.proxies.TransientRelationPivotTableParameters _parameters)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("parameters", _parameters == null ? null : _parameters.getMendixObject());
+			java.util.List<IMendixObject> objs = Core.execute(context, "MyFirstModule.TransientRelationPivotTable_CreateEmptyList", params);
+			java.util.List<myfirstmodule.proxies.TransientRelationPivotTable> result = null;
+			if (objs != null)
+			{
+				result = new java.util.ArrayList<myfirstmodule.proxies.TransientRelationPivotTable>();
+				for (IMendixObject obj : objs)
+					result.add(myfirstmodule.proxies.TransientRelationPivotTable.initialize(context, obj));
+			}
+			return result;
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
+	public static java.util.List<myfirstmodule.proxies.TransientRelationPivotTable> transientRelationPivotTable_CreateList(IContext context, myfirstmodule.proxies.TransientRelationPivotTableParameters _parameters)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("parameters", _parameters == null ? null : _parameters.getMendixObject());
+			java.util.List<IMendixObject> objs = Core.execute(context, "MyFirstModule.TransientRelationPivotTable_CreateList", params);
+			java.util.List<myfirstmodule.proxies.TransientRelationPivotTable> result = null;
+			if (objs != null)
+			{
+				result = new java.util.ArrayList<myfirstmodule.proxies.TransientRelationPivotTable>();
+				for (IMendixObject obj : objs)
+					result.add(myfirstmodule.proxies.TransientRelationPivotTable.initialize(context, obj));
+			}
+			return result;
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
+	public static myfirstmodule.proxies.TransientRelationPivotTableParameters transientRelationPivotTableParameters_CreateObject(IContext context)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			IMendixObject result = (IMendixObject)Core.execute(context, "MyFirstModule.TransientRelationPivotTableParameters_CreateObject", params);
+			return result == null ? null : myfirstmodule.proxies.TransientRelationPivotTableParameters.initialize(context, result);
 		}
 		catch (CoreException e)
 		{

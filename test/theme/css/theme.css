@@ -960,3 +960,16 @@ a:hover {
 	-webkit-transform: rotate(270deg) translate(-8em,0);
 	-webkit-transform-origin: 0 0;
 }
+
+.PivotDataWidgetDisplay-North {
+    background-color: lawngreen;    
+}
+.PivotDataWidgetDisplay-East {
+    background-color: yellow;    
+}
+.PivotDataWidgetDisplay-South {
+    background-color: aqua;    
+}
+.PivotDataWidgetDisplay-West {
+    background-color: salmon;    
+}

@@ -14,6 +14,8 @@ The pivot table widget can count the items in each cell or determine the sum, av
 
 For count and sum, optionally a total column and row can be displayed.
 
+There is also a display action for string values. This allows to show correlation between two entities. Note that this is most effective when each combination of the two entities exists only once.
+
 The various elements in the table can easily be styled.
 
 It is also possible to set thresholds that apply a CSS class depending on the cell value.
@@ -114,6 +116,7 @@ Y-axis label class | PivotDataWidgetYLabel | Y-axis label CSS class.
 Odd row class | PivotDataWidgetOddRow | Odd row CSS class.
 Even row class | PivotDataWidgetEvenRow | Even row CSS class.
 Cell class | PivotDataWidgetCellCenter | Cell CSS class.
+Display value class | PivotDataWidgetDisplay- | Display value CSS class prefix. The actual value is appended. Only when one value exists for the cell.
 Total column cell class | PivotDataWidgetTotalColumnCellCenter | Cell CSS class.
 Total row class | PivotDataWidgetTotalRow | Cell CSS class.
 Total row cell class | PivotDataWidgetTotalRowCellCenter | Cell CSS class.
@@ -124,6 +127,10 @@ Export button class | | Export button CSS class. This is an additional class app
 ###Styling thresholds
 
 To highlight certain values, styling thresholds can be defined. When the cell value is at least the threshold value and less than any next threshold value, the CSS class will be applied to the cell. Only the CSS class of the highest threshold will be used.
+
+###Styling for display action
+
+The display action allows an additional class to be specified, containing the actual value. Most effective for a small number of unique values or enumerations.
 
 ####Configuration onCellClick category
 
