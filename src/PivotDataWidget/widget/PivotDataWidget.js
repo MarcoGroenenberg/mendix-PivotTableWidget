@@ -676,6 +676,7 @@
                     footerRowNode,
                     headerRowNode,
                     node,
+                    nodeValue,
                     rowNode,
                     rowIndex,
                     tableNode,
@@ -784,23 +785,24 @@
                                 }
                                 xTotalsMap[xIdValue] = xTotal;
                             }
+                            switch (this.cellValueAttrType) {
+                            case "Currency":
+                                nodeValue = this.formatCurrency(cellValue);
+                                break;
+
+                            case "Integer":
+                            case "Long":
+                                nodeValue = dojoNumber.format(cellValue, { places: this.precisionForAverage });
+                                break;
+
+                            default:
+                                nodeValue      = cellValue;
+                            }
                         } else {
-                            cellValue       = "&nbsp;";
+                            nodeValue       = "&nbsp;";
                         }
                         node                = document.createElement("td");
-                        switch (this.cellValueAttrType) {
-                        case "Currency":
-                            node.innerHTML = this.formatCurrency(cellValue);
-                            break;
-
-                        case "Integer":
-                        case "Long":
-                            node.innerHTML = dojoNumber.format(cellValue, { places: this.precisionForAverage });
-                            break;
-
-                        default:
-                            node.innerHTML      = cellValue;
-                        }
+                        node.innerHTML      = nodeValue;
                         domClass.add(node, this.cellClass);
                         if (this.onCellClickMicroflow !== "") {
                             node.setAttribute(this.xIdAttr, xIdValue);
