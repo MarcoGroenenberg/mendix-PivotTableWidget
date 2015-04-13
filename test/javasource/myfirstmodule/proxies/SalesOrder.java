@@ -67,16 +67,6 @@ public class SalesOrder
 	}
 
 	/**
-	 * @deprecated Use 'new SalesOrder(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.SalesOrder create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.SalesOrder");
-		return new myfirstmodule.proxies.SalesOrder(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'SalesOrder.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

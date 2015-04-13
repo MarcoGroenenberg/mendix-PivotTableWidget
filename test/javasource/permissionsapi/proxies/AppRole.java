@@ -63,16 +63,6 @@ public class AppRole
 	}
 
 	/**
-	 * @deprecated Use 'new AppRole(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static permissionsapi.proxies.AppRole create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "PermissionsAPI.AppRole");
-		return new permissionsapi.proxies.AppRole(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'AppRole.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

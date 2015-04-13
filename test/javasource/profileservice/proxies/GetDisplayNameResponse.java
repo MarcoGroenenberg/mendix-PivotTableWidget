@@ -2,7 +2,7 @@
 //
 // WARNING: Code you write here will be lost the next time you deploy the project.
 
-package myfirstmodule.proxies;
+package profileservice.proxies;
 
 import com.mendix.core.Core;
 import com.mendix.core.CoreException;
@@ -13,23 +13,23 @@ import com.mendix.systemwideinterfaces.core.IMendixObject;
 /**
  * 
  */
-public class ExportCsv
+public class GetDisplayNameResponse
 {
-	private final IMendixObject exportCsvMendixObject;
+	private final IMendixObject getDisplayNameResponseMendixObject;
 
 	private final IContext context;
 
 	/**
 	 * Internal name of this entity
 	 */
-	public static final String entityName = "MyFirstModule.ExportCsv";
+	public static final String entityName = "ProfileService.GetDisplayNameResponse";
 
 	/**
 	 * Enum describing members of this entity
 	 */
 	public enum MemberNames
 	{
-		CsvData("CsvData");
+		Result("Result");
 
 		private String metaName;
 
@@ -45,44 +45,44 @@ public class ExportCsv
 		}
 	}
 
-	public ExportCsv(IContext context)
+	public GetDisplayNameResponse(IContext context)
 	{
-		this(context, Core.instantiate(context, "MyFirstModule.ExportCsv"));
+		this(context, Core.instantiate(context, "ProfileService.GetDisplayNameResponse"));
 	}
 
-	protected ExportCsv(IContext context, IMendixObject exportCsvMendixObject)
+	protected GetDisplayNameResponse(IContext context, IMendixObject getDisplayNameResponseMendixObject)
 	{
-		if (exportCsvMendixObject == null)
+		if (getDisplayNameResponseMendixObject == null)
 			throw new IllegalArgumentException("The given object cannot be null.");
-		if (!Core.isSubClassOf("MyFirstModule.ExportCsv", exportCsvMendixObject.getType()))
-			throw new IllegalArgumentException("The given object is not a MyFirstModule.ExportCsv");
+		if (!Core.isSubClassOf("ProfileService.GetDisplayNameResponse", getDisplayNameResponseMendixObject.getType()))
+			throw new IllegalArgumentException("The given object is not a ProfileService.GetDisplayNameResponse");
 
-		this.exportCsvMendixObject = exportCsvMendixObject;
+		this.getDisplayNameResponseMendixObject = getDisplayNameResponseMendixObject;
 		this.context = context;
 	}
 
 	/**
-	 * @deprecated Use 'ExportCsv.load(IContext, IMendixIdentifier)' instead.
+	 * @deprecated Use 'GetDisplayNameResponse.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated
-	public static myfirstmodule.proxies.ExportCsv initialize(IContext context, IMendixIdentifier mendixIdentifier) throws CoreException
+	public static profileservice.proxies.GetDisplayNameResponse initialize(IContext context, IMendixIdentifier mendixIdentifier) throws CoreException
 	{
-		return myfirstmodule.proxies.ExportCsv.load(context, mendixIdentifier);
+		return profileservice.proxies.GetDisplayNameResponse.load(context, mendixIdentifier);
 	}
 
 	/**
 	 * Initialize a proxy using context (recommended). This context will be used for security checking when the get- and set-methods without context parameters are called.
 	 * The get- and set-methods with context parameter should be used when for instance sudo access is necessary (IContext.getSudoContext() can be used to obtain sudo access).
 	 */
-	public static myfirstmodule.proxies.ExportCsv initialize(IContext context, IMendixObject mendixObject)
+	public static profileservice.proxies.GetDisplayNameResponse initialize(IContext context, IMendixObject mendixObject)
 	{
-		return new myfirstmodule.proxies.ExportCsv(context, mendixObject);
+		return new profileservice.proxies.GetDisplayNameResponse(context, mendixObject);
 	}
 
-	public static myfirstmodule.proxies.ExportCsv load(IContext context, IMendixIdentifier mendixIdentifier) throws CoreException
+	public static profileservice.proxies.GetDisplayNameResponse load(IContext context, IMendixIdentifier mendixIdentifier) throws CoreException
 	{
 		IMendixObject mendixObject = Core.retrieveId(context, mendixIdentifier);
-		return myfirstmodule.proxies.ExportCsv.initialize(context, mendixObject);
+		return profileservice.proxies.GetDisplayNameResponse.initialize(context, mendixObject);
 	}
 
 	/**
@@ -117,39 +117,39 @@ public class ExportCsv
 		Core.delete(context, getMendixObject());
 	}
 	/**
-	 * @return value of CsvData
+	 * @return value of Result
 	 */
-	public final String getCsvData()
+	public final String getResult()
 	{
-		return getCsvData(getContext());
+		return getResult(getContext());
 	}
 
 	/**
 	 * @param context
-	 * @return value of CsvData
+	 * @return value of Result
 	 */
-	public final String getCsvData(IContext context)
+	public final String getResult(IContext context)
 	{
-		return (String) getMendixObject().getValue(context, MemberNames.CsvData.toString());
+		return (String) getMendixObject().getValue(context, MemberNames.Result.toString());
 	}
 
 	/**
-	 * Set value of CsvData
-	 * @param csvdata
+	 * Set value of Result
+	 * @param result
 	 */
-	public final void setCsvData(String csvdata)
+	public final void setResult(String result)
 	{
-		setCsvData(getContext(), csvdata);
+		setResult(getContext(), result);
 	}
 
 	/**
-	 * Set value of CsvData
+	 * Set value of Result
 	 * @param context
-	 * @param csvdata
+	 * @param result
 	 */
-	public final void setCsvData(IContext context, String csvdata)
+	public final void setResult(IContext context, String result)
 	{
-		getMendixObject().setValue(context, MemberNames.CsvData.toString(), csvdata);
+		getMendixObject().setValue(context, MemberNames.Result.toString(), result);
 	}
 
 	/**
@@ -157,7 +157,7 @@ public class ExportCsv
 	 */
 	public final IMendixObject getMendixObject()
 	{
-		return exportCsvMendixObject;
+		return getDisplayNameResponseMendixObject;
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class ExportCsv
 
 		if (obj != null && getClass().equals(obj.getClass()))
 		{
-			final myfirstmodule.proxies.ExportCsv that = (myfirstmodule.proxies.ExportCsv) obj;
+			final profileservice.proxies.GetDisplayNameResponse that = (profileservice.proxies.GetDisplayNameResponse) obj;
 			return getMendixObject().equals(that.getMendixObject());
 		}
 		return false;
@@ -193,7 +193,7 @@ public class ExportCsv
 	 */
 	public static String getType()
 	{
-		return "MyFirstModule.ExportCsv";
+		return "ProfileService.GetDisplayNameResponse";
 	}
 
 	/**

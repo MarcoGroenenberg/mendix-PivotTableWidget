@@ -58,16 +58,6 @@ public class ExportCsvDocument extends system.proxies.FileDocument
 	}
 
 	/**
-	 * @deprecated Use 'new ExportCsvDocument(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.ExportCsvDocument create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.ExportCsvDocument");
-		return new myfirstmodule.proxies.ExportCsvDocument(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'ExportCsvDocument.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

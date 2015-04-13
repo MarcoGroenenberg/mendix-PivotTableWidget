@@ -68,16 +68,6 @@ public class TransientRelationPivotTable
 	}
 
 	/**
-	 * @deprecated Use 'new TransientRelationPivotTable(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.TransientRelationPivotTable create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.TransientRelationPivotTable");
-		return new myfirstmodule.proxies.TransientRelationPivotTable(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'TransientRelationPivotTable.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

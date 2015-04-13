@@ -67,16 +67,6 @@ public class Incident
 	}
 
 	/**
-	 * @deprecated Use 'new Incident(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.Incident create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.Incident");
-		return new myfirstmodule.proxies.Incident(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'Incident.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

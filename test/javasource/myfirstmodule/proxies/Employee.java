@@ -63,16 +63,6 @@ public class Employee
 	}
 
 	/**
-	 * @deprecated Use 'new Employee(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.Employee create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.Employee");
-		return new myfirstmodule.proxies.Employee(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'Employee.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

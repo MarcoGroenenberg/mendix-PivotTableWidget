@@ -74,16 +74,6 @@ public class TransientRotatedColumnHeaderData
 	}
 
 	/**
-	 * @deprecated Use 'new TransientRotatedColumnHeaderData(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.TransientRotatedColumnHeaderData create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.TransientRotatedColumnHeaderData");
-		return new myfirstmodule.proxies.TransientRotatedColumnHeaderData(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'TransientRotatedColumnHeaderData.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

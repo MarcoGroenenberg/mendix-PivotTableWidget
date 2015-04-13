@@ -65,16 +65,6 @@ public class EmployeeCarrierRelation
 	}
 
 	/**
-	 * @deprecated Use 'new EmployeeCarrierRelation(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.EmployeeCarrierRelation create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.EmployeeCarrierRelation");
-		return new myfirstmodule.proxies.EmployeeCarrierRelation(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'EmployeeCarrierRelation.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

@@ -63,16 +63,6 @@ public class Category
 	}
 
 	/**
-	 * @deprecated Use 'new Category(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.Category create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.Category");
-		return new myfirstmodule.proxies.Category(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'Category.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

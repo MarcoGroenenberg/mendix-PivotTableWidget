@@ -64,16 +64,6 @@ public class TransientIncidentPivotTableParameters
 	}
 
 	/**
-	 * @deprecated Use 'new TransientIncidentPivotTableParameters(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.TransientIncidentPivotTableParameters create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.TransientIncidentPivotTableParameters");
-		return new myfirstmodule.proxies.TransientIncidentPivotTableParameters(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'TransientIncidentPivotTableParameters.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

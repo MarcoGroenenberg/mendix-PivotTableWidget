@@ -952,7 +952,7 @@
             },
 
             /**
-             * Called after creation of onCellClickEntity failed
+             * Called after object committed
              *
              */
             onClickMendixObjectCommitted : function () {

@@ -63,16 +63,6 @@ public class Carrier
 	}
 
 	/**
-	 * @deprecated Use 'new Carrier(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.Carrier create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.Carrier");
-		return new myfirstmodule.proxies.Carrier(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'Carrier.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

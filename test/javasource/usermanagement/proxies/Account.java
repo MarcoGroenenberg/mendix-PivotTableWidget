@@ -66,16 +66,6 @@ public class Account extends system.proxies.User
 	}
 
 	/**
-	 * @deprecated Use 'new Account(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static usermanagement.proxies.Account create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "UserManagement.Account");
-		return new usermanagement.proxies.Account(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'Account.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

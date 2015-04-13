@@ -70,16 +70,6 @@ public class TransientSalesOrderPivotTable
 	}
 
 	/**
-	 * @deprecated Use 'new TransientSalesOrderPivotTable(Context)' instead. Note that the constructor will not insert the new object in the database.
-	 */
-	@Deprecated
-	public static myfirstmodule.proxies.TransientSalesOrderPivotTable create(IContext context) throws CoreException
-	{
-		IMendixObject mendixObject = Core.create(context, "MyFirstModule.TransientSalesOrderPivotTable");
-		return new myfirstmodule.proxies.TransientSalesOrderPivotTable(context, mendixObject);
-	}
-
-	/**
 	 * @deprecated Use 'TransientSalesOrderPivotTable.load(IContext, IMendixIdentifier)' instead.
 	 */
 	@Deprecated

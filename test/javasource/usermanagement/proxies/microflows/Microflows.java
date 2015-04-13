@@ -14,7 +14,7 @@ import com.mendix.systemwideinterfaces.core.IMendixObject;
 
 public class Microflows
 {
-	// These are the Microflows for the UserManagement module
+	// These are the microflows for the UserManagement module
 
 	public static void changeMyPassword(IContext context, usermanagement.proxies.AccountPasswordData _accountPasswordData)
 	{

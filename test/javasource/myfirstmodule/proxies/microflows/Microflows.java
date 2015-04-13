@@ -14,7 +14,7 @@ import com.mendix.systemwideinterfaces.core.IMendixObject;
 
 public class Microflows
 {
-	// These are the Microflows for the MyFirstModule module
+	// These are the microflows for the MyFirstModule module
 
 	public static void carrier_Generate(IContext context)
 	{
