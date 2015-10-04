@@ -635,11 +635,8 @@
                 case "Long":
                 case "Currency":
                 case "Float":
-                    keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a - b; });
-                    break;
-
                 case "DateTime":
-                    keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a.getTime() - b.getTime(); });
+                    keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a - b; });
                     break;
 
                 default:
