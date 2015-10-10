@@ -1,4 +1,5 @@
-/*global mx, mendix, require, console, define, module, logger */
+/*jslint browser:true, nomen:true, plusplus: true */
+/*global mx, mendix, require, console, alert, define, module, logger */
 /**
 
 	PivotDataWidget
@@ -21,10 +22,10 @@
 
     require([
 
-        'dojo/_base/declare', 'mxui/widget/_WidgetBase', 'dijit/_Widget',
+        'dojo/_base/declare', 'mxui/widget/_WidgetBase', 'dijit/_Widget', 'big/big',
         'mxui/dom', 'dojo/dom-class', 'dojo/dom-construct', 'dojo/_base/lang', 'dojo/number', 'dojo/_base/array', 'dojo/date/locale'
 
-    ], function (declare, _WidgetBase, _Widget, domMx, domClass, domConstruct, lang, dojoNumber, dojoArray, dojoDateLocale) {
+    ], function (declare, _WidgetBase, _Widget, Big, domMx, domClass, domConstruct, lang, dojoNumber, dojoArray, dojoDateLocale) {
 
         // Declare widget.
         return declare('PivotDataWidget.widget.PivotDataWidget', [ _WidgetBase, _Widget ], {
@@ -42,21 +43,21 @@
             cellValueAttrType               : null,
             validActionAttrTypeCombinations : [
                 "sum_Currency",
-                "sum_Float",
+                "sum_Decimal",
                 "sum_Integer",
                 "sum_Long",
                 "average_Currency",
-                "average_Float",
+                "average_Decimal",
                 "average_Integer",
                 "average_Long",
                 "min_Currency",
                 "min_DateTime",
-                "min_Float",
+                "min_Decimal",
                 "min_Integer",
                 "min_Long",
                 "max_Currency",
                 "max_DateTime",
-                "max_Float",
+                "max_Decimal",
                 "max_Integer",
                 "max_Long",
                 "display_String",
@@ -263,16 +264,27 @@
                     if (this.tresholdList && this.tresholdList.length) {
                         for (tresholdIndex = 0; tresholdIndex < this.tresholdList.length; tresholdIndex = tresholdIndex + 1) {
                             // The property value is always a string, convert it to a value that can be used for comparison
-                            switch (this.cellValueAttrType) {
-                            case "DateTime":
-                                minDateValue = this.parseDate(this.tresholdList[tresholdIndex].minValue, this.cellValueDateformat);
-                                this.tresholdList[tresholdIndex].minValue = Number(minDateValue);
-                                break;
+                            if (this.cellValueAction === "count") {
+                                this.tresholdList[tresholdIndex].minValue = new Big(this.tresholdList[tresholdIndex].minValue);
+                            } else {
+                                switch (this.cellValueAttrType) {
+                                case "DateTime":
+                                    minDateValue = this.parseDate(this.tresholdList[tresholdIndex].minValue, this.cellValueDateformat);
+                                    this.tresholdList[tresholdIndex].minValue = new Big(minDateValue.getTime());
+                                    break;
 
-                            default:
-                                this.tresholdList[tresholdIndex].minValue = Number(this.tresholdList[tresholdIndex].minValue);
+                                default:
+                                    this.tresholdList[tresholdIndex].minValue = new Big(this.tresholdList[tresholdIndex].minValue);
+                                }
                             }
                         }
+                    }
+                    
+                    if (this.cellValueAttrType === "Decimal") {
+                        if (this.precisionForDecimal < 0 || this.precisionForDecimal > 10) {
+                            errorMessageArray.push("Decimal precision for Decimal must be between 0 and 10");
+                        }
+                        
                     }
                 }
 
@@ -367,7 +379,7 @@
              */
             getCellElementCount: function (valueArray) {
 
-                return valueArray.length;
+                return new Big(valueArray.length);
             },
 
             /**
@@ -381,15 +393,23 @@
                 var
                     i,
                     result,
+                    sumDecimal = new Big(0),
                     sum = 0;
 
-                for (i = 0; i < valueArray.length; i = i + 1) {
-                    sum = sum + valueArray[i];
+                switch (this.cellValueAttrType) {
+                case "Decimal":
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        sumDecimal = sumDecimal.plus(valueArray[i]);
+                    }
+                    return sumDecimal;
+
+                default:
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        sum = sum + valueArray[i];
+                    }
+                    return sum;
                 }
 
-                result = sum;
-
-                return result;
             },
 
             /**
@@ -400,15 +420,14 @@
              */
             getCellAverage: function (valueArray) {
 
-                var
-                    average,
-                    result;
 
-                average = this.getCellSum(valueArray) / valueArray.length;
+                switch (this.cellValueAttrType) {
+                case "Decimal":
+                    return this.getCellSum(valueArray).div(valueArray.length);
 
-                result = average;
-
-                return result;
+                default:
+                    return this.getCellSum(valueArray) / valueArray.length;
+                }
             },
 
             /**
@@ -425,12 +444,25 @@
                     result,
                     value;
 
-                for (i = 0; i < valueArray.length; i = i + 1) {
-                    value = valueArray[i];
-                    if (minValue === null || value < minValue) {
-                        minValue = value;
+                switch (this.cellValueAttrType) {
+                case "Decimal":
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        value = valueArray[i];
+                        if (minValue === null || value.lt(minValue)) {
+                            minValue = value;
+                        }
+                    }
+                    break;
+
+                default:
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        value = valueArray[i];
+                        if (minValue === null || value < minValue) {
+                            minValue = value;
+                        }
                     }
                 }
+                
 
                 switch (this.cellValueAttrType) {
                 case "DateTime":
@@ -459,10 +491,22 @@
                     result,
                     value;
 
-                for (i = 0; i < valueArray.length; i = i + 1) {
-                    value = valueArray[i];
-                    if (maxValue === null || value > maxValue) {
-                        maxValue = value;
+                switch (this.cellValueAttrType) {
+                case "Decimal":
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        value = valueArray[i];
+                        if (maxValue === null || value.gt(maxValue)) {
+                            maxValue = value;
+                        }
+                    }
+                    break;
+
+                default:
+                    for (i = 0; i < valueArray.length; i = i + 1) {
+                        value = valueArray[i];
+                        if (maxValue === null || value > maxValue) {
+                            maxValue = value;
+                        }
                     }
                 }
 
@@ -634,7 +678,6 @@
                 case "Integer":
                 case "Long":
                 case "Currency":
-                case "Float":
                 case "DateTime":
                     keyArray = Object.keys(sortValueMap).sort(function (a, b) {return a - b; });
                     break;
@@ -731,8 +774,8 @@
                     domClass.add(node, this.yLabelClass);
                     rowNode.appendChild(node);
 
-                    // Columns
-                    yTotal = 0;
+                    // Columns                    
+                    yTotal = new Big(0);
                     for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
                         // Get the ID
                         xIdValue            = this.xKeyArray[colIndex].idValue;
@@ -748,13 +791,13 @@
                                 for (tresholdIndex = 0; tresholdIndex < this.tresholdList.length; tresholdIndex = tresholdIndex + 1) {
                                     switch (this.cellValueAttrType) {
                                     case "DateTime":
-                                        tresholdCompareValue = this.parseDate(cellValue, this.cellValueDateformat);
+                                        tresholdCompareValue = new Big(this.parseDate(cellValue, this.cellValueDateformat).getTime());
                                         break;
 
                                     default:
-                                        tresholdCompareValue = cellValue;
+                                        tresholdCompareValue = new Big(cellValue);
                                     }
-                                    if (tresholdCompareValue >= this.tresholdList[tresholdIndex].minValue) {
+                                    if (tresholdCompareValue.gt(this.tresholdList[tresholdIndex].minValue)) {
                                         tresholdClass = this.tresholdList[tresholdIndex].additionalClass;
                                     } else {
                                         break;
@@ -772,19 +815,23 @@
                             }
                             // Process the totals, if requested
                             if (this.showTotalColumn) {
-                                yTotal       = yTotal + cellValue;
+                                yTotal = yTotal.plus(cellValue);
                             }
                             if (this.showTotalRow) {
                                 if (xTotalsMap[xIdValue]) {
-                                    xTotal = xTotalsMap[xIdValue] + cellValue;
+                                    xTotal = xTotalsMap[xIdValue].plus(cellValue);
                                 } else {
-                                    xTotal = cellValue;
+                                    xTotal = new Big(cellValue);
                                 }
                                 xTotalsMap[xIdValue] = xTotal;
                             }
                             switch (this.cellValueAttrType) {
                             case "Currency":
                                 nodeValue = this.formatCurrency(cellValue);
+                                break;
+
+                            case "Decimal":
+                                nodeValue = this.formatDecimal(cellValue);
                                 break;
 
                             case "Integer":
@@ -818,14 +865,19 @@
                         rowNode.appendChild(node);
                     }
                     if (this.showTotalColumn) {
+                        // Totals are always Decimal objects!
                         node                = document.createElement("td");
                         switch (this.cellValueAttrType) {
                         case "Currency":
-                            node.innerHTML = this.formatCurrency(yTotal);
+                            node.innerHTML = this.formatDecimal(yTotal, 2);
+                            break;
+
+                        case "Decimal":
+                            node.innerHTML = this.formatDecimal(yTotal);
                             break;
 
                         default:
-                            node.innerHTML      = yTotal;
+                            node.innerHTML = this.formatDecimal(yTotal, 0);
                         }
                         domClass.add(node, this.totalColumnCellClass);
                         rowNode.appendChild(node);
@@ -836,25 +888,30 @@
 
                 if (this.showTotalRow) {
                     // Footer row containing the totals for each column
+                    // Totals are always Decimal objects!
                     footerRowNode = document.createElement("tr");
                     domClass.add(footerRowNode, this.totalRowClass);
                     node = domMx.td(this.totalRowLabel);
                     domClass.add(node, this.yLabelClass);
                     footerRowNode.appendChild(node);
-                    yTotal = 0;
+                    yTotal = new Big(0);
                     for (colIndex = 0; colIndex < this.xKeyArray.length; colIndex = colIndex + 1) {
                         // Get the ID
                         xIdValue            = this.xKeyArray[colIndex].idValue;
                         cellValue           = xTotalsMap[xIdValue];
-                        yTotal              = yTotal + cellValue;
+                        yTotal              = yTotal.plus(cellValue);
                         node                = document.createElement("td");
                         switch (this.cellValueAttrType) {
                         case "Currency":
-                            node.innerHTML = this.formatCurrency(cellValue);
+                            node.innerHTML = this.formatDecimal(cellValue, 2);
                             break;
 
+                        case "Decimal":
+                            node.innerHTML = this.formatDecimal(cellValue);
+                            break;
+                                
                         default:
-                            node.innerHTML      = cellValue;
+                            node.innerHTML = this.formatDecimal(cellValue, 0);
                         }
                         domClass.add(node, this.totalRowCellClass);
                         footerRowNode.appendChild(node);
@@ -862,11 +919,15 @@
                     node                = document.createElement("td");
                     switch (this.cellValueAttrType) {
                     case "Currency":
-                        node.innerHTML = this.formatCurrency(yTotal);
+                        node.innerHTML = this.formatDecimal(yTotal, 2);
+                        break;
+
+                    case "Decimal":
+                        node.innerHTML = this.formatDecimal(yTotal);
                         break;
 
                     default:
-                        node.innerHTML      = yTotal;
+                        node.innerHTML = this.formatDecimal(yTotal, 0);
                     }
                     domClass.add(node, this.totalRowCellClass);
                     footerRowNode.appendChild(node);
@@ -1151,9 +1212,12 @@
                 case "Integer":
                 case "Long":
                 case "Currency":
-                case "Float":
                 case "DateTime":
                     result = Number(attrValue);
+                    break;
+
+                case "Decimal":
+                    result = attrValue;
                     break;
 
                 default:
@@ -1254,6 +1318,21 @@
                 }
 
                 return result;
+            },
+
+            /**
+             * Format a decimal value
+             *
+             * @param value         The value to format
+             * @param precision     The number of decimals to use, optional, precisionForDecimal is used if not specified
+             * @returns {String}    The formatted value
+             */
+            formatDecimal: function (value, precision) {
+
+                if (precision === undefined) {
+                    precision = this.precisionForDecimal;
+                }
+                return value.toFixed(precision);
             },
 
             /**

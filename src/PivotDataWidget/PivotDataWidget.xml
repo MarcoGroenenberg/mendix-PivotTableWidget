@@ -29,6 +29,7 @@
             <description>The attribute used as cell value. Not necessary for cell value action count. All other actions are performed on this attribute</description>
             <attributeTypes>
                 <attributeType name="Currency"/>
+                <attributeType name="Decimal"/>
                 <attributeType name="DateTime"/>
                 <attributeType name="Integer"/>
                 <attributeType name="Long"/>
@@ -53,6 +54,11 @@
             <caption>Decimal precision for average</caption>
             <category>Configuration</category>
             <description>Decimal precision for average, applicable for integer and long values only</description>
+        </property>
+        <property key="precisionForDecimal" type="integer" defaultValue="2">
+            <caption>Decimal precision for Decimal</caption>
+            <category>Configuration</category>
+            <description>Decimal precision for Decimal, also for average</description>
         </property>
         <property key="cellValueDateformat" type="string" defaultValue="dd-MM-yyyy">
             <caption>Cell value date format</caption>
@@ -320,7 +326,7 @@
                 <property key="minValue" type="string">
                     <caption>Minimum value</caption>
                     <category>Styling</category>
-                    <description>When the cell value is a date, enter a date as a string value that can be parsed into a date using the value of the cell value date format property</description>
+                    <description>Valid decimal or date. When the cell value is a date, enter a date as a string value that can be parsed into a date using the value of the cell value date format property</description>
                 </property>
                 <property key="additionalClass" type="string">
                     <caption>Class</caption>

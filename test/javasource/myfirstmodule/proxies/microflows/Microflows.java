@@ -16,6 +16,20 @@ public class Microflows
 {
 	// These are the microflows for the MyFirstModule module
 
+	public static boolean bCo_SalesOrder(IContext context, myfirstmodule.proxies.SalesOrder _salesOrder)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("SalesOrder", _salesOrder == null ? null : _salesOrder.getMendixObject());
+			return (Boolean)Core.execute(context, "MyFirstModule.BCo_SalesOrder", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
 	public static void carrier_Generate(IContext context)
 	{
 		try
@@ -158,6 +172,19 @@ public class Microflows
 		{
 			Map<String, Object> params = new HashMap<String, Object>();
 			Core.execute(context, "MyFirstModule.SalesOrder_Generate", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+
+	public static void salesOrder_SetCurrencyValue(IContext context)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			Core.execute(context, "MyFirstModule.SalesOrder_SetCurrencyValue", params);
 		}
 		catch (CoreException e)
 		{

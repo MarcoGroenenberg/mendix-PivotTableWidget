@@ -34,6 +34,7 @@ public class SalesOrder
 		totalSalesValue("totalSalesValue"),
 		itemCount("itemCount"),
 		region("region"),
+		totalSalesValueCcy("totalSalesValueCcy"),
 		SalesOrder_Employee("MyFirstModule.SalesOrder_Employee");
 
 		private String metaName;
@@ -204,7 +205,7 @@ public class SalesOrder
 	/**
 	 * @return value of totalSalesValue
 	 */
-	public final Double gettotalSalesValue()
+	public final java.math.BigDecimal gettotalSalesValue()
 	{
 		return gettotalSalesValue(getContext());
 	}
@@ -213,16 +214,16 @@ public class SalesOrder
 	 * @param context
 	 * @return value of totalSalesValue
 	 */
-	public final Double gettotalSalesValue(IContext context)
+	public final java.math.BigDecimal gettotalSalesValue(IContext context)
 	{
-		return (Double) getMendixObject().getValue(context, MemberNames.totalSalesValue.toString());
+		return (java.math.BigDecimal) getMendixObject().getValue(context, MemberNames.totalSalesValue.toString());
 	}
 
 	/**
 	 * Set value of totalSalesValue
 	 * @param totalsalesvalue
 	 */
-	public final void settotalSalesValue(Double totalsalesvalue)
+	public final void settotalSalesValue(java.math.BigDecimal totalsalesvalue)
 	{
 		settotalSalesValue(getContext(), totalsalesvalue);
 	}
@@ -232,7 +233,7 @@ public class SalesOrder
 	 * @param context
 	 * @param totalsalesvalue
 	 */
-	public final void settotalSalesValue(IContext context, Double totalsalesvalue)
+	public final void settotalSalesValue(IContext context, java.math.BigDecimal totalsalesvalue)
 	{
 		getMendixObject().setValue(context, MemberNames.totalSalesValue.toString(), totalsalesvalue);
 	}
@@ -315,6 +316,42 @@ public class SalesOrder
 			getMendixObject().setValue(context, MemberNames.region.toString(), region.toString());
 		else
 			getMendixObject().setValue(context, MemberNames.region.toString(), null);
+	}
+
+	/**
+	 * @return value of totalSalesValueCcy
+	 */
+	public final Double gettotalSalesValueCcy()
+	{
+		return gettotalSalesValueCcy(getContext());
+	}
+
+	/**
+	 * @param context
+	 * @return value of totalSalesValueCcy
+	 */
+	public final Double gettotalSalesValueCcy(IContext context)
+	{
+		return (Double) getMendixObject().getValue(context, MemberNames.totalSalesValueCcy.toString());
+	}
+
+	/**
+	 * Set value of totalSalesValueCcy
+	 * @param totalsalesvalueccy
+	 */
+	public final void settotalSalesValueCcy(Double totalsalesvalueccy)
+	{
+		settotalSalesValueCcy(getContext(), totalsalesvalueccy);
+	}
+
+	/**
+	 * Set value of totalSalesValueCcy
+	 * @param context
+	 * @param totalsalesvalueccy
+	 */
+	public final void settotalSalesValueCcy(IContext context, Double totalsalesvalueccy)
+	{
+		getMendixObject().setValue(context, MemberNames.totalSalesValueCcy.toString(), totalsalesvalueccy);
 	}
 
 	/**
