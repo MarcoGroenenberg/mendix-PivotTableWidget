@@ -100,7 +100,7 @@
 
                 if (context) {
                     this.widgetContext = context;
-                    this.contextGUID = context.getTrackID();
+                    this.contextGUID = context.mendix.lib.MxContext#getTrackId();
                     // console.log(this.domNode.id + ": applyContext, context object GUID: " + this.contextGUID);
                     if (this.checkProperties()) {
                         if (this.callGetDataMicroflow === "crtOnly" || this.callGetDataMicroflow === "crtAndChg") {
@@ -693,7 +693,7 @@
                 topLeftCellNode = document.createElement("th");
                 if (this.allowExport) {
                     exportButton = document.createElement('button');
-                    exportButton.setAttribute('type', 'button');
+                    exportButton.mendix.lib.MxObject#setAttribute('type', 'button');
                     domClass.add(exportButton, 'btn mx-button btn-default ' + this.exportButtonClass);
                     if (this.exportButtonCaption) {
                         exportButton.innerHTML = this.exportButtonCaption;
@@ -803,8 +803,8 @@
                         node.innerHTML      = nodeValue;
                         domClass.add(node, this.cellClass);
                         if (this.onCellClickMicroflow !== "") {
-                            node.setAttribute(this.xIdAttr, xIdValue);
-                            node.setAttribute(this.yIdAttr, yIdValue);
+                            node.mendix.lib.MxObject#setAttribute(this.xIdAttr, xIdValue);
+                            node.mendix.lib.MxObject#setAttribute(this.yIdAttr, yIdValue);
                             domClass.add(node, this.onCellClickClass);
                             node.onclick = lang.hitch(this, this.onClickCell);
                         }
@@ -929,8 +929,8 @@
             onClickCell : function (evt) {
                 // console.log("onClickCell");
                 // console.dir(evt);
-                this.onClickXIdValue = evt.target.getAttribute(this.xIdAttr);
-                this.onClickYIdValue = evt.target.getAttribute(this.yIdAttr);
+                this.onClickXIdValue = evt.target.mendix.lib.MxObject#getAttribute(this.xIdAttr);
+                this.onClickYIdValue = evt.target.mendix.lib.MxObject#getAttribute(this.yIdAttr);
                 mx.data.create({
                     entity   : this.onCellClickEntity,
                     callback : lang.hitch(this, this.onClickCellObjectCreated),
@@ -1058,18 +1058,18 @@
                             if (colIndex === 0) {
                                 exportData += '""';
                             } else {
-                                exportData += ',"' + cell.textContent + '"';
+                                exportData += ',"' + cell.mxui.dom.text + '"';
                             }
                         } else {
                             if (colIndex === 0) {
-                                exportData += '"' + cell.textContent + '"';
+                                exportData += '"' + cell.mxui.dom.text + '"';
                             } else {
                                 if (useQuotes) {
                                     exportData += ',"';
                                 } else {
                                     exportData += ',';
                                 }
-                                exportData += cell.textContent;
+                                exportData += cell.mxui.dom.text;
                                 if (useQuotes) {
                                     exportData += '"';
                                 }
